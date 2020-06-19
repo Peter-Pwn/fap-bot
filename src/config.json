@@ -4,8 +4,8 @@
 	"debug": true,
 	"logDir": "./log",
 	"prefix": "!",
-	"owners": ["yourdiscordueserid"],
+	"owners": ["id"],
 	"adminPerm": "ADMINISTRATOR",
 	"modPerm": "MANAGE_MESSAGES",
-	"token": "yourtoken"
+	"token": "token"
 }
