@@ -3,7 +3,7 @@
 	"appLongName": "fabulous and pointless",
 	"debug": true,
 	"logDir": "./log",
-  "prefix": "!",
+	"prefix": "!",
 	"owners": ["yourdiscordueserid"],
 	"adminPerm": "ADMINISTRATOR",
 	"modPerm": "MANAGE_MESSAGES",
