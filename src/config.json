@@ -1,0 +1,11 @@
+{
+	"appName": "fap",
+	"appLongName": "fabulous and pointless",
+	"debug": true,
+	"logDir": "./log",
+	"prefix": "!",
+	"owners": ["yourdiscorduserid"],
+	"adminPerm": "ADMINISTRATOR",
+	"modPerm": "MANAGE_MESSAGES",
+	"token": "yourbottoken"
+}
