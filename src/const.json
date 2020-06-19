@@ -1,0 +1,12 @@
+{
+  "PERMLVL": {
+		"OWNER": 8,
+		"ADMIN": 4,
+    "MOD": 2,
+    "EVERYONE": 1
+  },
+  "MSGTYPE": {
+    "TEXT": 1,
+    "DM": 2
+  }
+}
