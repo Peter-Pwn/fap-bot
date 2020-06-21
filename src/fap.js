@@ -9,12 +9,11 @@ const fnc = require('../fnc');
 
 const client = new Discord.Client();
 //create DB connection
-//TODO: get values from config
-const sequelize = new Sequelize('database', 'user', 'password', {
-	host: 'localhost',
-	dialect: 'sqlite',
+const sequelize = new Sequelize(cfg.db.database, cfg.db.user, cfg.db.password, {
+	dialect: cfg.db.dialect,
+	host: cfg.db.host,
 	logging: false,
-	storage: './db/database.sqlite',
+	storage: cfg.db.storage,
 });
 //create logger
 client.logger = winston.createLogger({
@@ -180,6 +179,7 @@ process.on('uncaughtException', e => {
 	}
 });
 
+//clean logout if bot gets terminated
 process.on('SIGINT', () => {
 	if (client) client.destroy();
 });

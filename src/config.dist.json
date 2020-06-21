@@ -7,5 +7,13 @@
 	"owners": ["yourdiscorduserid"],
 	"adminPerm": "ADMINISTRATOR",
 	"modPerm": "MANAGE_MESSAGES",
-	"token": "yourbottoken"
+	"token": "yourbottoken",
+	"db": {
+		"dialect": "sqlite",
+		"host": "localhost",
+		"database": "database",
+		"user": "user",
+		"password": "password",
+		"storage": "./db/database.sqlite"
+	}
 }
