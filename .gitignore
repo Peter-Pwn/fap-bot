@@ -5,4 +5,4 @@ package-lock.json
 db/
 img/
 log/
-src/config.js
+src/config.json
