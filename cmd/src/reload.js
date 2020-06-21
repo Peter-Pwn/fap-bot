@@ -49,7 +49,7 @@ module.exports = {
 			try {
 				message.client.logger.info('Reloading complete bot');
 				delete require.cache[require.resolve('../../src/const.json')];
-				delete require.cache[require.resolve('../../src/config.json')];
+				delete require.cache[require.resolve('../../src/config.js')];
 				message.client.commands.forEach(command => delete require.cache[require.resolve(`./${command.name}.js`)]);
 				delete require.cache[require.resolve('..')];
 				Object.getOwnPropertyNames(message.client.db).forEach(tbl => delete require.cache[require.resolve(`../../tbl/src/${tbl}.js`)]);

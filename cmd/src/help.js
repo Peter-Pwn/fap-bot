@@ -1,5 +1,5 @@
 const CON = require('../../src/const.json');
-const cfg = require('../../src/config.json');
+const cfg = require('../../src/config.js');
 const fnc = require('../../fnc');
 
 module.exports = {

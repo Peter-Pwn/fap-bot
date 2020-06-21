@@ -1,5 +1,5 @@
 const CON = require('../../src/const.json');
-const cfg = require('../../src/config.json');
+const cfg = require('../../src/config.js');
 
 module.exports = {
 	description: 'Shuts the bot down.',

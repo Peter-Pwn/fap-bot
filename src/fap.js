@@ -1,37 +1,17 @@
-//load config from file or env vars
-const fs = require('fs');
-let cfg = {};
-if (fs.existsSync(`${module.path}/config.json`)) {
-	cfg = require('./config.json');
-}
-else {
-	cfg = process.env;
-	//handle owner array
-	cfg.db_URI = process.env.DATABASE_URL;
-}
-
 const Discord = require('discord.js');
 const Sequelize = require('sequelize');
 const winston = require('winston');
 require('winston-daily-rotate-file');
 
 const CON = require('./const.json');
+const cfg = require('./config.js');
 const fnc = require('../fnc');
 
 const client = new Discord.Client();
 //create DB connection
-<<<<<<< HEAD
 const sequelize = new Sequelize(cfg.db_URI, { logging: false });
-=======
-const sequelize = new Sequelize(cfg.db.database, cfg.db.user, cfg.db.password, {
-	dialect: cfg.db.dialect,
-	host: cfg.db.host,
-	logging: false,
-	storage: cfg.db.storage,
-});
->>>>>>> 3b06e7498e9abe1e150d4e6c51ecee83cf417735
 //create logger
-client.logger = winston.createLogger({
+/*client.logger = winston.createLogger({
 	transports: [
 		new winston.transports.Console(),
 		new winston.transports.DailyRotateFile({
@@ -40,6 +20,12 @@ client.logger = winston.createLogger({
 			datePattern: 'YYYY-MM',
 			level: 'warn',
 		}),
+	],
+	format: winston.format.printf(info => `[${info.level.toUpperCase()}] ${new Date().toISOString()} - ${(info instanceof Error) ? info.stack : info.message}`),
+});*/
+client.logger = winston.createLogger({
+	transports: [
+		new winston.transports.Console(),
 	],
 	format: winston.format.printf(info => `[${info.level.toUpperCase()}] ${new Date().toISOString()} - ${(info instanceof Error) ? info.stack : info.message}`),
 });

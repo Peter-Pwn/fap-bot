@@ -1,4 +1,4 @@
-const cfg = require('../../src/config.json');
+const cfg = require('../../src/config.js');
 
 module.exports = function(message, text, { mention = true, del = true, delay = 5 } = {}) {
 	if (typeof mention !== 'boolean') mention = true;
