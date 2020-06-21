@@ -7,5 +7,6 @@
 	"owners": ["yourdiscorduserid"],
 	"adminPerm": "ADMINISTRATOR",
 	"modPerm": "MANAGE_MESSAGES",
-	"token": "yourbottoken"
+	"token": "yourbottoken",
+	"db_URI": "sqlite:db/database.sqlite"
 }

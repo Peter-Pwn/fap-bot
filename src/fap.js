@@ -1,21 +1,26 @@
+//load config from file or env vars
+const fs = require('fs');
+let cfg = {};
+if (fs.existsSync(`${module.path}/config.json`)) {
+	cfg = require('./config.json');
+}
+else {
+	cfg = process.env;
+	//handle owner array
+	cfg.db_URI = process.env.DATABASE_URL;
+}
+
 const Discord = require('discord.js');
 const Sequelize = require('sequelize');
 const winston = require('winston');
 require('winston-daily-rotate-file');
 
 const CON = require('./const.json');
-const cfg = require('./config.json');
 const fnc = require('../fnc');
 
 const client = new Discord.Client();
 //create DB connection
-//TODO: get values from config
-const sequelize = new Sequelize('database', 'user', 'password', {
-	host: 'localhost',
-	dialect: 'sqlite',
-	logging: false,
-	storage: './db/database.sqlite',
-});
+const sequelize = new Sequelize(cfg.db_URI, { logging: false });
 //create logger
 client.logger = winston.createLogger({
 	transports: [
@@ -180,6 +185,7 @@ process.on('uncaughtException', e => {
 	}
 });
 
+//clean logout if bot gets terminated
 process.on('SIGINT', () => {
 	if (client) client.destroy();
 });

@@ -5,18 +5,20 @@
   "main": "./src/index",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node .",
+    "start": "node ./src/index.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
-  "author": "",
+  "author": "PeterPwn",
   "license": "ISC",
   "dependencies": {
     "discord.js": "^12.2.0",
     "eslint": "^7.1.0",
     "sequelize": "^5.21.12",
-    "sqlite3": "^4.2.0",
     "winston": "^3.2.1",
     "winston-daily-rotate-file": "^4.5.0"
+  },
+	"engines": {
+    "node": "12.17.0"
   }
 }
