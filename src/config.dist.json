@@ -1,7 +1,7 @@
 {
 	"appName": "fap",
 	"appLongName": "fabulous and pointless",
-	"debug": true,
+	"debug": false,
 	"logDir": "./log",
 	"prefix": "!",
 	"owners": ["yourdiscorduserid"],

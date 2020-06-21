@@ -8,7 +8,7 @@ module.exports = {
 	args: 0,
 	usage: '<arg1> [opt1]',
 	msgType: CON.MSGTYPE.TEXT | CON.MSGTYPE.DM,
-	permLvl: CON.PERMLVL.EVERYONE,
+	permLvl: CON.PERMLVL.OWNER,
 	cooldown: 3,
 	deleteMsg: true,
 	execute(message, args) {

@@ -1,3 +1,4 @@
+//load commands from disc
 const Discord = require('discord.js');
 
 try {

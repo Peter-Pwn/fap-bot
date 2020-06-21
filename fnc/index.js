@@ -1,3 +1,4 @@
+//load functions from disc
 try {
 	const fs = require('fs');
 	const functions = {};

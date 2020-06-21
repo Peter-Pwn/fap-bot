@@ -13,6 +13,7 @@ module.exports = {
 	deleteMsg: true,
 	async execute(message, args) {
 		let channel = null;
+		//get the voice channel, as arg or the connected channel
 		if (args.length) {
 			channel = message.client.channels.cache.find(c => c.name === args[0] && c.type === 'voice');
 			if (!channel) return fnc.replyExt(message, `${args[0]} is not a valid voice channel`);
@@ -25,6 +26,7 @@ module.exports = {
 			channel = message.member.voice.channel;
 		}
 
+		//check for existing log and look or unlock the channel
 		let lock = message.client.locks.get(channel.id);
 		if (lock) {
 			if (lock.memberID !== message.member.id && !message.member.hasPermission(cfg.modPerm)) {

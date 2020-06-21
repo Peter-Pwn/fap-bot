@@ -8,12 +8,15 @@ const cfg = require('./config.json');
 const fnc = require('../fnc');
 
 const client = new Discord.Client();
+//create DB connection
+//TODO: get values from config
 const sequelize = new Sequelize('database', 'user', 'password', {
 	host: 'localhost',
 	dialect: 'sqlite',
 	logging: false,
 	storage: './db/database.sqlite',
 });
+//create logger
 client.logger = winston.createLogger({
 	transports: [
 		new winston.transports.Console(),
@@ -35,14 +38,17 @@ client.locks = new Discord.Collection();
 client.welcomeReacts = new Discord.Collection();
 
 client.on('message', message => {
+	//handle commands send to the bot
 	//TODO: guild prefix
 	if (!message.content.startsWith(cfg.prefix) || message.author.bot) return;
 
+	//split args by spaces, but not between quotes
 	const args = Array.from(message.content.slice(cfg.prefix.length).matchAll(/"([^"\\]*(?:\\.[^"\\]*)*)"|([^ ]+)/g), g => g[1] || g[2]);
 	const commandName = args.shift().toLowerCase();
 	const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
 	if (!command) return;
 
+	//check permissions and handle special channel type stuff
 	if (command.permLvl === CON.PERMLVL.OWNER && !cfg.owners.includes(message.author.id)) return;
 
 	if (message.channel.type === 'text' && (command.msgType & CON.MSGTYPE.TEXT || typeof command.msgType === 'undefined')) {
@@ -56,12 +62,14 @@ client.on('message', message => {
 		return;
 	}
 
+	//check for args count
 	if (command.args && args.length < command.args) {
 		let reply = 'you didn\'t provide enoght arguments.';
 		if (command.usage) reply += `\n\`Usage:\` ${cfg.prefix}${commandName} ${command.usage}\nRequired Arguments are marked with < >, optional with [ ].\nUse quotes to commit arguments containg spaces. E.g. \`${cfg.prefix}lock "channel name"\``;
 		return fnc.replyExt(message, reply);
 	}
 
+	//check cooldown
 	if (!cooldowns.has(command.name))	cooldowns.set(command.name, new Discord.Collection());
 	const timestamps = cooldowns.get(command.name);
 	const cooldown = (command.cooldown || 3) * 1000;
@@ -73,6 +81,7 @@ client.on('message', message => {
 	timestamps.set(message.author.id, now + cooldown);
 	client.setTimeout(() => timestamps.delete(message.author.id), cooldown);
 
+	//execute the command
 	try {
 		command.execute(message, args);
 	}
@@ -82,6 +91,7 @@ client.on('message', message => {
 });
 
 client.on('messageReactionAdd', (reaction, user) => {
+	//handle role assignment on reactions
 	if (client.welcomeReacts.has(reaction.message.id)) {
 		const react = client.welcomeReacts.get(reaction.message.id).get(reaction.emoji.id || reaction.emoji.name);
 		if (react) reaction.message.guild.members.cache.get(user.id).roles.add(reaction.message.guild.roles.cache.get(react.roleID));
@@ -89,6 +99,7 @@ client.on('messageReactionAdd', (reaction, user) => {
 });
 
 client.on('messageReactionRemove', (reaction, user) => {
+	//handle role assignment on reactions
 	if (client.welcomeReacts.has(reaction.message.id)) {
 		const react = client.welcomeReacts.get(reaction.message.id).get(reaction.emoji.id || reaction.emoji.name);
 		if (react) reaction.message.guild.members.cache.get(user.id).roles.remove(reaction.message.guild.roles.cache.get(react.roleID));
@@ -96,6 +107,7 @@ client.on('messageReactionRemove', (reaction, user) => {
 });
 
 client.on('voiceStateUpdate', (oldState, newState) => {
+	//handle auto unlock of voice channels
 	if (oldState.channelID && oldState.channelID !== newState.channelID && client.locks.has(oldState.channelID)) {
 		const lock = client.locks.get(oldState.channelID);
 		if (oldState.member.id === lock.memberID && !lock.permanent) {
@@ -109,11 +121,14 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 client.once('ready', async () => {
 	//client.user.setPresence({ status: 'invisible' });
 
+	//sync the db model
 	//client.db.test.sync({ force: true });
 	Object.getOwnPropertyNames(client.db).forEach(async tbl => await client.db[tbl].sync());
 
+	//get locks from db
 	await client.db.locks.findAll().then(locks => locks.forEach(lock => client.locks.set(lock.channelID, lock)));
 
+	//get welcome messages and reactions from db
 	await client.db.welcomeMsgs.findAll().then(msgs => msgs.forEach(async msg => {
 		try {
 			const message = await client.channels.fetch(msg.channelID).then(async channel => await channel.messages.fetch(msg.messageID));
@@ -133,6 +148,7 @@ client.once('ready', async () => {
 	client.logger.info(`${cfg.appName} is ready`);
 });
 
+//handle errors
 client.on('debug', e => client.logger.debug(e));
 client.on('warn', e => client.logger.warn(e));
 client.on('error', e => {
@@ -145,7 +161,7 @@ client.on('error', e => {
 	}
 });
 process.on('unhandledRejection', e => {
-	if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions') client.logger.warn('Missing Permissions\n:' + e.stack);
+	if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions') return client.logger.warn('Missing Permissions\n:' + e.stack);
 	if (client) {
 		client.logger.error('unhandledRejection:\n' + e.stack);
 		client.destroy();
@@ -168,4 +184,5 @@ process.on('SIGINT', () => {
 	if (client) client.destroy();
 });
 
+//connect to discord
 client.login(cfg.token);
