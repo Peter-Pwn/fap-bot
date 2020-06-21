@@ -20,7 +20,16 @@ const fnc = require('../fnc');
 
 const client = new Discord.Client();
 //create DB connection
+<<<<<<< HEAD
 const sequelize = new Sequelize(cfg.db_URI, { logging: false });
+=======
+const sequelize = new Sequelize(cfg.db.database, cfg.db.user, cfg.db.password, {
+	dialect: cfg.db.dialect,
+	host: cfg.db.host,
+	logging: false,
+	storage: cfg.db.storage,
+});
+>>>>>>> 3b06e7498e9abe1e150d4e6c51ecee83cf417735
 //create logger
 client.logger = winston.createLogger({
 	transports: [

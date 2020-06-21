@@ -19,6 +19,10 @@
     "winston-daily-rotate-file": "^4.5.0"
   },
 	"engines": {
+<<<<<<< HEAD
     "node": "12.17.0"
+=======
+    "node": "12.x"
+>>>>>>> 3b06e7498e9abe1e150d4e6c51ecee83cf417735
   }
 }

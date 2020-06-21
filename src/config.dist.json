@@ -8,5 +8,16 @@
 	"adminPerm": "ADMINISTRATOR",
 	"modPerm": "MANAGE_MESSAGES",
 	"token": "yourbottoken",
+<<<<<<< HEAD
 	"db_URI": "sqlite:db/database.sqlite"
+=======
+	"db": {
+		"dialect": "sqlite",
+		"host": "localhost",
+		"database": "database",
+		"user": "user",
+		"password": "password",
+		"storage": "./db/database.sqlite"
+	}
+>>>>>>> 3b06e7498e9abe1e150d4e6c51ecee83cf417735
 }
