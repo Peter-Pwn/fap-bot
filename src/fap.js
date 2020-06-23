@@ -1,7 +1,7 @@
 const Discord = require('discord.js');
 const Sequelize = require('sequelize');
 const winston = require('winston');
-require('winston-daily-rotate-file');
+//require('winston-daily-rotate-file');
 
 const CON = require('./const.json');
 const cfg = require('./config.js');
@@ -11,23 +11,19 @@ const client = new Discord.Client();
 //create DB connection
 const sequelize = new Sequelize(cfg.db_URI, { logging: false });
 //create logger
-/*client.logger = winston.createLogger({
-	transports: [
-		new winston.transports.Console(),
-		new winston.transports.DailyRotateFile({
-			dirname: cfg.logDir,
-			filename: `${cfg.appName}-%DATE%.log`,
-			datePattern: 'YYYY-MM',
-			level: 'warn',
-		}),
-	],
-	format: winston.format.printf(info => `[${info.level.toUpperCase()}] ${new Date().toISOString()} - ${(info instanceof Error) ? info.stack : info.message}`),
-});*/
+/*
+new winston.transports.DailyRotateFile({
+	dirname: cfg.logDir,
+	filename: `${cfg.appName}-%DATE%.log`,
+	datePattern: 'YYYY-MM',
+	level: 'warn',
+}),
+*/
 client.logger = winston.createLogger({
 	transports: [
 		new winston.transports.Console(),
 	],
-	format: winston.format.printf(info => `[${info.level.toUpperCase()}] ${new Date().toISOString()} - ${(info instanceof Error) ? info.stack : info.message}`),
+	format: winston.format.printf(info => `[${info.level.toUpperCase()}] ${(info instanceof Error) ? info.stack : info.message}`),
 });
 
 client.commands = require('../cmd');
@@ -51,9 +47,9 @@ client.on('message', message => {
 	//check permissions and handle special channel type stuff
 	if (command.permLvl === CON.PERMLVL.OWNER && !cfg.owners.includes(message.author.id)) return;
 
-	if (message.channel.type === 'text' && (command.msgType & CON.MSGTYPE.TEXT || typeof command.msgType === 'undefined')) {
-		if (command.deleteMsg === true || typeof command.deleteMsg === 'undefined')	message.delete();
-		if (!(fnc.getPerms(message.member) & command.permLvl)) return fnc.replyExt(message, 'you don\'t have the permission to use this command');
+	if (message.channel.type === 'text' && command.msgType & CON.MSGTYPE.TEXT) {
+		if (command.deleteMsg === true)	message.delete();
+		if (!(fnc.getPerms(message.member) & command.permLvl)) return fnc.replyExt(message, 'you don\'t have the permission to use this command', { color: CON.TEXTCLR.WARN });
 	}
 	else if (message.channel.type === 'dm' && command.msgType & CON.MSGTYPE.DM) {
 		//DM stuff
@@ -66,17 +62,17 @@ client.on('message', message => {
 	if (command.args && args.length < command.args) {
 		let reply = 'you didn\'t provide enoght arguments.';
 		if (command.usage) reply += `\n\`Usage:\` ${cfg.prefix}${commandName} ${command.usage}\nRequired Arguments are marked with < >, optional with [ ].\nUse quotes to commit arguments containg spaces. E.g. \`${cfg.prefix}lock "channel name"\``;
-		return fnc.replyExt(message, reply);
+		return fnc.replyExt(message, reply, { color: CON.TEXTCLR.WARN });
 	}
 
 	//check cooldown
 	if (!cooldowns.has(command.name))	cooldowns.set(command.name, new Discord.Collection());
 	const timestamps = cooldowns.get(command.name);
-	const cooldown = (command.cooldown || 3) * 1000;
+	const cooldown = command.cooldown * 1000;
 	const now = Date.now();
 	if (timestamps.has(message.author.id)) {
 		const expirationTime = timestamps.get(message.author.id);
-		if (now < expirationTime) return fnc.replyExt(message, `please wait ${((expirationTime - now) / 1000).ceil()} more second(s) before reusing ${commandName}`);
+		if (now < expirationTime) return fnc.replyExt(message, `please wait ${Math.ceil((expirationTime - now) / 1000)} more second(s) before reusing ${commandName}`, { color: CON.TEXTCLR.WARN });
 	}
 	timestamps.set(message.author.id, now + cooldown);
 	client.setTimeout(() => timestamps.delete(message.author.id), cooldown);
@@ -119,7 +115,8 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 });
 
 client.once('ready', async () => {
-	//client.user.setPresence({ status: 'invisible' });
+	//if set, set your presence
+	if (cfg.presence) client.user.setPresence(cfg.presence);
 
 	//sync the db model
 	//client.db.test.sync({ force: true });
@@ -132,7 +129,7 @@ client.once('ready', async () => {
 	await client.db.welcomeMsgs.findAll().then(msgs => msgs.forEach(async msg => {
 		try {
 			const message = await client.channels.fetch(msg.channelID).then(async channel => await channel.messages.fetch(msg.messageID));
-			if (msg.cmdList) msg.text += '\n' + fnc.getCmdList(client, 'text', CON.PERMLVL.EVERYONE).reduce((txt, cmd) => txt + `● \`${cfg.prefix}${cmd[0]}\` ${cmd[1]}\n`, '');
+			if (msg.cmdList) msg.text += fnc.getCmdList(client, 'text', CON.PERMLVL.EVERYONE).reduce((txt, cmd) => txt + `\n● \`${cfg.prefix}${cmd[0]}\` ${cmd[1]}`, '');
 			await message.edit(msg.text);
 		}
 		catch (e) {
@@ -157,17 +154,17 @@ client.on('error', e => {
 		client.destroy();
 	}
 	else {
-		console.error('discordError:\n', e);
+		console.error('[ERROR] discordError:\n', e);
 	}
 });
 process.on('unhandledRejection', e => {
-	if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions') return client.logger.warn('Missing Permissions\n:' + e.stack);
 	if (client) {
+		if (e.name === 'DiscordAPIError: Missing Access' && e.message === 'Missing Permissions' || e.message === 'Missing Access') return client.logger.warn('Missing Permissions:\n' + e.stack);
 		client.logger.error('unhandledRejection:\n' + e.stack);
 		client.destroy();
 	}
 	else {
-		console.error('unhandledRejection:\n', e);
+		console.error('[ERROR] unhandledRejection:\n', e);
 	}
 });
 process.on('uncaughtException', e => {
@@ -176,7 +173,7 @@ process.on('uncaughtException', e => {
 		client.destroy();
 	}
 	else {
-		console.error('uncaughtException:\n', e);
+		console.error('[ERROR] uncaughtException:\n', e);
 	}
 });
 

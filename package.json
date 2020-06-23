@@ -2,7 +2,7 @@
   "name": "fap-bot",
   "version": "1.0.0",
   "description": "fabulous and pointless discord bot",
-  "main": "./src/index",
+  "main": "./src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node ./src/index.js",

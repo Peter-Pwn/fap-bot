@@ -24,7 +24,7 @@ module.exports = {
 				}
 				catch (e) {
 					message.client.logger.error(`Couldn't reload function ${func}:\n${e.stack}`);
-					fnc.replyExt(message, `there was an error while reloading function ${func}:\n\`${e.message}\``);
+					fnc.replyExt(message, `there was an error while reloading function ${func}:\n\`${e.message}\``, { color: CON.TEXTCLR.ERROR });
 				}
 			}
 			else {
@@ -40,8 +40,8 @@ module.exports = {
 					fnc.replyExt(message, `command ${command.name} was reloaded`);
 				}
 				catch (e) {
-					message.client.logger.error(`Couldn't reload command ${args[0]}:\n${e.stack}`);
-					fnc.replyExt(message, `there was an error while reloading command ${args[0]}:\n\`${e.message}\``);
+					message.client.logger.error(`Couldn't reload command ${args[0]}:\n${e.name === 'Error' ? e.message : e.stack}`);
+					fnc.replyExt(message, `there was an error while reloading command ${args[0]}:\n\`${e.message}\``, { color: CON.TEXTCLR.ERROR });
 				}
 			}
 		}
@@ -56,15 +56,15 @@ module.exports = {
 				Object.getOwnPropertyNames(fnc).forEach(func => delete require.cache[require.resolve(`../../fnc/src/${func}.js`)]);
 				delete require.cache[require.resolve('../../fnc')];
 				message.client.destroy();
-				require.main.exports.reload();
+				require.main.exports.load();
 			}
 			catch (e) {
 				if (message) {
 					message.client.logger.error(`Couldn't reload bot:\n${e.stack}`);
-					fnc.replyExt(message, `there was an error while reloading the bot:\n\`${e.stack}\``);
+					fnc.replyExt(message, `there was an error while reloading the bot:\n\`${e.stack}\``, { color: CON.TEXTCLR.ERROR });
 				}
 				else {
-					console.error(`Couldn't reload bot:\n${e.stack}`);
+					console.error(`[ERROR] Couldn't reload bot:\n${e.stack}`);
 				}
 			}
 		}

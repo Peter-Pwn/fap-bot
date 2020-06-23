@@ -8,5 +8,9 @@
 	"MSGTYPE": {
 		"TEXT": 1,
 		"DM": 2
+	},
+	"TEXTCLR": {
+		"ERROR": "#d2041d",
+		"WARN": "#d8d455"
 	}
 }

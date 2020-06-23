@@ -9,7 +9,7 @@ module.exports = {
 	cooldown: 3,
 	deleteMsg: true,
 	execute(message) {
-		message.client.logger.info(`${cfg.appName} is shutting down`);
+		message.client.logger.info(`${message.author.username} is shutting down the bot.`);
 		message.client.destroy();
 	},
 };

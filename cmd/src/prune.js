@@ -14,13 +14,13 @@ module.exports = {
 		args[0] = parseInt(args[0]) + 1;
 		if (isNaN(args[0]) || args[0] < 2 || args[0] > 100) {
 			if (message.channel.type === 'text') message.delete();
-			return fnc.replyExt(message, 'you need to input a number between 1 and 99');
+			return fnc.replyExt(message, 'you need to input a number between 1 and 99', { color: CON.TEXTCLR.WARN });
 		}
 
 		if (message.channel.type === 'text') {
 			message.channel.bulkDelete(args[0], true).catch(e => {
 				message.client.logger.warn(`Couldn't prune ${message.channel.name}:\n${e.stack}`);
-				message.fnc.replyExt(message, 'there was an error trying to prune messages in this channel');
+				message.fnc.replyExt(message, 'there was an error trying to prune messages in this channel', { color: CON.TEXTCLR.ERROR });
 				message.delete();
 			});
 		}

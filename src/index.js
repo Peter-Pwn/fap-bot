@@ -1,8 +1,8 @@
 module.exports = {
-	reload: function() {
+	load: function() {
 		if (require.resolve('./fap.js')) delete require.cache[require.resolve('./fap.js')];
 		require('./fap.js');
 	},
 };
 
-module.exports.reload();
+module.exports.load();

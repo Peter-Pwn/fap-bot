@@ -13,33 +13,33 @@ module.exports = {
 	deleteMsg: true,
 	async execute(message, args) {
 		let channel = null;
-		//get the voice channel, as arg or the connected channel
-		if (args.length) {
-			channel = message.client.channels.cache.find(c => c.name === args[0] && c.type === 'voice');
-			if (!channel) return fnc.replyExt(message, `${args[0]} is not a valid voice channel`);
-			if (channel !== message.member.voice.channel && !message.member.hasPermission(cfg.modPerm)) {
-				return fnc.replyExt(message, 'you don\'t have the permission to use this command');
+		try {
+			//get the voice channel, as arg or the connected channel
+			if (args.length) {
+				channel = message.client.channels.cache.find(c => c.name === args[0] && c.type === 'voice');
+				if (!channel) return fnc.replyExt(message, `${args[0]} is not a valid voice channel`);
+				if (channel !== message.member.voice.channel && !message.member.hasPermission(cfg.modPerm)) {
+					return fnc.replyExt(message, 'you don\'t have the permission to use this command', { color: CON.TEXTCLR.WARN });
+				}
 			}
-		}
-		else {
-			if (!message.member.voice.channelID) return fnc.replyExt(message, 'you need to be in a voice channel');
-			channel = message.member.voice.channel;
-		}
+			else {
+				if (!message.member.voice.channelID) return fnc.replyExt(message, 'you need to be in a voice channel', { color: CON.TEXTCLR.WARN });
+				channel = message.member.voice.channel;
+			}
 
-		//check for existing log and look or unlock the channel
-		let lock = message.client.locks.get(channel.id);
-		if (lock) {
-			if (lock.memberID !== message.member.id && !message.member.hasPermission(cfg.modPerm)) {
-				if (channel.members.has(lock.memberID)) return fnc.replyExt(message, 'you can\'t unlock the channel, because somebody else locked it');
-				if (lock.permanent) return fnc.replyExt(message, 'you can\'t unlock the channel, because a mod locked it');
-				return fnc.replyExt(message, 'you don\'t have the permission to use this command');
+			//check for existing lock and unlock or lock the channel
+			let lock = message.client.locks.get(channel.id);
+			if (lock) {
+				if (lock.memberID !== message.member.id && !message.member.hasPermission(cfg.modPerm)) {
+					if (channel.members.has(lock.memberID)) return fnc.replyExt(message, 'you can\'t unlock the channel, because somebody else locked it', { color: CON.TEXTCLR.WARN });
+					if (lock.permanent) return fnc.replyExt(message, 'you can\'t unlock the channel, because a mod locked it', { color: CON.TEXTCLR.WARN });
+					return fnc.replyExt(message, 'you don\'t have the permission to use this command', { color: CON.TEXTCLR.WARN });
+				}
+				await channel.setUserLimit(lock.limit);
+				await message.client.db.locks.destroy({ where: { channelID: channel.id } });
+				message.client.locks.delete(channel.id);
 			}
-			channel.setUserLimit(lock.limit);
-			await message.client.db.locks.destroy({ where: { channelID: channel.id } });
-			message.client.locks.delete(channel.id);
-		}
-		else {
-			try {
+			else {
 				lock = {
 					channelID: channel.id,
 					memberID: message.member.id,
@@ -48,12 +48,15 @@ module.exports = {
 				};
 				await message.client.db.locks.create(lock);
 				message.client.locks.set(channel.id, lock);
-				channel.setUserLimit(1);
+				await channel.setUserLimit(1);
 			}
-			catch (e) {
-				if (e.name === 'SequelizeUniqueConstraintError') return message.client.logger.warn(`Lock already exists\n${e.stack}`);
-				return message.client.logger.error(e);
+		}
+		catch (e) {
+			if (e.name === 'SequelizeUniqueConstraintError') return;
+			if (e.name === 'DiscordAPIError: Missing Access' && e.message === 'Missing Permissions' || e.message === 'Missing Access') {
+				return message.channel.send(`${message.guild.owner} , I don't have permission to set the user limit here (${channel})!\nI need permission to manage the channel and to be able to connect to it.`);
 			}
+			return message.client.logger.error(e);
 		}
 	},
 };

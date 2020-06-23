@@ -10,5 +10,5 @@ try {
 	};
 }
 catch (e) {
-	console.error(`Couldn't load functions:\n${e.stack}`);
+	console.error(`[ERROR] Couldn't load functions:\n${e.stack}`);
 }
