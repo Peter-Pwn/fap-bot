@@ -22,16 +22,15 @@ module.exports = {
 			if (command.aliases) data.push(`\`Aliases:\` ${command.name}, ${command.aliases.join(', ')}`);
 			data.push(`\`Description:\` ${command.description}`);
 			if (command.descriptionLong) data.push(`${command.descriptionLong}`);
-			data.push(`\`Usage:\` ${cfg.prefix}${command.name} ${command.usage}`);
+			data.push(`\`Usage:\` ${cfg.prefix}${args[0]} ${command.usage}`);
 			data.push('Required Arguments are marked with < >, optional with [ ].');
 			data.push(`Use quotes to commit arguments containg spaces. E.g. \`${cfg.prefix}lock "channel name"\``);
-			fnc.replyExt(message, data.join('\n'), { mention: false, delay: 10 });
 		}
 		else {
-			data.push(`**A list of the commands you can use ${message.author}**\n`);
+			data.push(`**A list of commands you can use ${message.author}**\n`);
 			fnc.getCmdList(message.client, message.channel.type, fnc.getPerms(message.member || message.author)).forEach(cmd => data.push(`● \`${cfg.prefix}${cmd[0]}\` ${cmd[1]}`));
 			data.push(`\nYou can use \`${cfg.prefix}help [command name]\` to get info on a specific command.`);
-			fnc.replyExt(message, data.join('\n'), { mention: false, delay: 10 });
 		}
+		fnc.replyExt(message, data.join('\n'), { mention: false, delay: 10 });
 	},
 };

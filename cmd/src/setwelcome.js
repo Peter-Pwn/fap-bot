@@ -20,7 +20,12 @@ module.exports = {
 			let welcomeMsg = null;
 			const welcomeMsgID = await message.client.db.welcomeMsgs.findOne({ attributes: ['id', 'messageID'], where: { channelID: message.channel.id } });
 			if (welcomeMsgID) {
-				welcomeMsg = await message.channel.messages.fetch(welcomeMsgID.messageID).catch(async () => await welcomeMsgID.destroy() && null);
+				welcomeMsg = await message.channel.messages.fetch(welcomeMsgID.messageID).catch(async () => {
+					message.client.welcomeReacts.delete(welcomeMsgID.messageID);
+					await message.client.db.welcomeReacts.destroy({ where: { messageID: welcomeMsgID.messageID } });
+					await welcomeMsgID.destroy();
+					return null;
+				});
 			}
 			if (welcomeMsg) {
 				await welcomeMsg.edit(text);
@@ -43,7 +48,10 @@ module.exports = {
 			}
 		}
 		catch (e) {
-			if (e.name === 'SequelizeUniqueConstraintError') return message.client.logger.warn('Welcome message already exists');
+			if (e.name === 'SequelizeUniqueConstraintError') return;
+			if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions' || e.message === 'Missing Access') {
+				return message.guild && message.guild.owner.send(`${message.guild.owner}, i don't have permission to send messages in \`${message.guild.name} #${message.channel.name}\`!`);
+			}
 			return message.client.logger.error(e);
 		}
 	},

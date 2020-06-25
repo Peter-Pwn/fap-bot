@@ -6,3 +6,4 @@ db/
 img/
 log/
 src/config.json
+package.dev.json

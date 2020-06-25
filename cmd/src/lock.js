@@ -26,6 +26,7 @@ module.exports = {
 				if (!message.member.voice.channelID) return fnc.replyExt(message, 'you need to be in a voice channel', { color: CON.TEXTCLR.WARN });
 				channel = message.member.voice.channel;
 			}
+			if (!channel.editable) return await message.channel.send(`${message.guild.owner}, i don't have permission to set the user limit in \`${channel.name}\`!\nI need permission to manage the channel and to be able to connect to it.`);
 
 			//check for existing lock and unlock or lock the channel
 			let lock = message.client.locks.get(channel.id);
@@ -53,8 +54,8 @@ module.exports = {
 		}
 		catch (e) {
 			if (e.name === 'SequelizeUniqueConstraintError') return;
-			if (e.name === 'DiscordAPIError: Missing Access' && e.message === 'Missing Permissions' || e.message === 'Missing Access') {
-				return message.channel.send(`${message.guild.owner} , I don't have permission to set the user limit here (${channel})!\nI need permission to manage the channel and to be able to connect to it.`);
+			if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions' || e.message === 'Missing Access') {
+				return message.guild && message.guild.owner.send(`${message.guild.owner}, i don't have permission to send messages in \`${message.guild.name} #${message.channel.name}\`!`);
 			}
 			return message.client.logger.error(e);
 		}

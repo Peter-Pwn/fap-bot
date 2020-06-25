@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 
 module.exports = {
-	messagelID: {
+	messageID: {
 		type: Sequelize.STRING,
 		allowNull: false,
 	},

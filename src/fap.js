@@ -35,7 +35,7 @@ client.welcomeReacts = new Discord.Collection();
 
 client.on('message', message => {
 	//handle commands send to the bot
-	//TODO: guild prefix
+	//TODO: guild prefix, mention other bot prefixes
 	if (!message.content.startsWith(cfg.prefix) || message.author.bot) return;
 
 	//split args by spaces, but not between quotes
@@ -106,7 +106,10 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 	//handle auto unlock of voice channels
 	if (oldState.channelID && oldState.channelID !== newState.channelID && client.locks.has(oldState.channelID)) {
 		const lock = client.locks.get(oldState.channelID);
-		if (oldState.member.id === lock.memberID && !lock.permanent) {
+		// unlock if all users left the channel
+		//if (oldState.member.id === lock.memberID && !lock.permanent) {
+		if (oldState.channel.members.size === 0 && !lock.permanent) {
+			if (!oldState.channel.editable) return;
 			oldState.channel.setUserLimit(lock.limit);
 			client.db.locks.destroy({ where: { channelID: oldState.channelID } });
 			client.locks.delete(oldState.channelID);
@@ -114,9 +117,21 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 	}
 });
 
+//INIT
 client.once('ready', async () => {
-	//if set, set your presence
+	//if set, set your presence https://discord.js.org/#/docs/main/stable/class/ClientUser?scrollTo=setPresence
 	if (cfg.presence) client.user.setPresence(cfg.presence);
+
+	//check for required guild permissions
+	client.guilds.cache.forEach(g => {
+		if (!g.me.permissions.has(CON.RQDPERMS)) {
+			let text = `Hey ${g.owner}, i don't have the required permissions on \`${g.name}\`.\n`;
+			text += 'I\'m missing the following permissions:\n`';
+			text += g.me.permissions.missing(CON.RQDPERMS).join('\n').replace(/_/g, ' ');
+			text += '`\nPlease make sure i also have these in the individual channels.';
+			g.owner.send(text);
+		}
+	});
 
 	//sync the db model
 	//client.db.test.sync({ force: true });
@@ -128,20 +143,34 @@ client.once('ready', async () => {
 	//get welcome messages and reactions from db
 	await client.db.welcomeMsgs.findAll().then(msgs => msgs.forEach(async msg => {
 		try {
-			const message = await client.channels.fetch(msg.channelID).then(async channel => await channel.messages.fetch(msg.messageID));
+			const message = await client.channels.fetch(msg.channelID || '0').then(async channel => await channel.messages.fetch(msg.messageID || '0'));
 			if (msg.cmdList) msg.text += fnc.getCmdList(client, 'text', CON.PERMLVL.EVERYONE).reduce((txt, cmd) => txt + `\n● \`${cfg.prefix}${cmd[0]}\` ${cmd[1]}`, '');
 			await message.edit(msg.text);
+
+			const reacts = await client.db.welcomeReacts.findAll({ where: { messageID: message.id } });
+			reacts.forEach(async react => {
+				if (message.reactions.cache.has(react.emojiID)) {
+					if (!client.welcomeReacts.has(react.messageID)) client.welcomeReacts.set(react.messageID, new Discord.Collection());
+					client.welcomeReacts.get(react.messageID).set(react.emojiID, react);
+				}
+				else {
+					await react.destroy();
+				}
+			});
 		}
 		catch (e) {
-			await client.db.welcomeReacts.destroy({ where: { messagelID: msg.messageID } });
-			await msg.destroy();
+			//message not found
+			if (e.name === 'DiscordAPIError' && e.message === 'Unknown Message') {
+				await client.db.welcomeReacts.destroy({ where: { messageID: msg.messageID } });
+				await msg.destroy();
+			}
+			else {
+				client.logger.error(e);
+			}
 		}
 	}));
-	await client.db.welcomeReacts.findAll().then(reacts => reacts.forEach(react => {
-		if (!client.welcomeReacts.has(react.messagelID)) client.welcomeReacts.set(react.messagelID, new Discord.Collection());
-		client.welcomeReacts.get(react.messagelID).set(react.emojiID, react);
-	}));
 
+	//INIT finished
 	client.logger.info(`${cfg.appName} is ready`);
 });
 
@@ -159,7 +188,7 @@ client.on('error', e => {
 });
 process.on('unhandledRejection', e => {
 	if (client) {
-		if (e.name === 'DiscordAPIError: Missing Access' && e.message === 'Missing Permissions' || e.message === 'Missing Access') return client.logger.warn('Missing Permissions:\n' + e.stack);
+		if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions' || e.message === 'Missing Access') return client.logger.warn('Missing Permissions:\n' + e.stack);
 		client.logger.error('unhandledRejection:\n' + e.stack);
 		client.destroy();
 	}

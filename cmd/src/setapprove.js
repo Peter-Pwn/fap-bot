@@ -48,7 +48,7 @@ module.exports = {
 				try {
 					await welcomeMsg.react(args[i]);
 					const react = {
-						messagelID: welcomeMsg.id,
+						messageID: welcomeMsg.id,
 						emojiID: args[i],
 						roleID: args[i + 1],
 					};
@@ -74,7 +74,7 @@ module.exports = {
 				try {
 					if (!welcomeMsg.reactions.cache.hase(args[i])) continue;
 					welcomeMsg.reactions.cache.get(args[i]).remove();
-					await message.client.db.welcomeReacts.destroy({ where: { messagelID: welcomeMsg.id, emojiID: args[i] } });
+					await message.client.db.welcomeReacts.destroy({ where: { messageID: welcomeMsg.id, emojiID: args[i] } });
 					welcomeReacts.delete(args[i]);
 				}
 				catch (e) {

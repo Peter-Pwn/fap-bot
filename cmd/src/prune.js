@@ -18,11 +18,14 @@ module.exports = {
 		}
 
 		if (message.channel.type === 'text') {
-			message.channel.bulkDelete(args[0], true).catch(e => {
+			try {
+				await message.channel.bulkDelete(args[0], true);
+			}
+			catch (e) {
 				message.client.logger.warn(`Couldn't prune ${message.channel.name}:\n${e.stack}`);
 				message.fnc.replyExt(message, 'there was an error trying to prune messages in this channel', { color: CON.TEXTCLR.ERROR });
 				message.delete();
-			});
+			}
 		}
 		else if (message.channel.type === 'dm') {
 			const messages = await message.author.dmChannel.messages.fetch();

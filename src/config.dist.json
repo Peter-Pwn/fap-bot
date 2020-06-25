@@ -4,6 +4,12 @@
 	"debug": false,
 	"logDir": "./log",
 	"prefix": "!",
+	"presence": {
+		"activity": {
+			"type": "WATCHING",
+			"name": "DEV"
+		}
+	},
 	"owners": ["yourdiscorduserid"],
 	"adminPerm": "ADMINISTRATOR",
 	"modPerm": "MANAGE_MESSAGES",
