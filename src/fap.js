@@ -27,7 +27,9 @@ client.logger = winston.createLogger({
 });
 
 client.commands = require('../cmd');
+
 client.db = require('../tbl')(sequelize);
+sequelize.sync();
 
 const cooldowns = new Discord.Collection();
 client.locks = new Discord.Collection();
@@ -132,10 +134,6 @@ client.once('ready', async () => {
 			g.owner.send(text);
 		}
 	});
-
-	//sync the db model
-	//client.db.test.sync({ force: true });
-	Object.getOwnPropertyNames(client.db).forEach(async tbl => await client.db[tbl].sync());
 
 	//get locks from db
 	await client.db.locks.findAll().then(locks => locks.forEach(lock => client.locks.set(lock.channelID, lock)));
