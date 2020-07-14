@@ -3,18 +3,22 @@ const cfg = require('../../src/config.js');
 const fnc = require('../../fnc');
 
 module.exports = {
+	aliases: ['setwelcome'],
 	description: 'Sets a welcome message in this channel.',
 	descriptionLong: 'You can let the bot append a list of all the commands available for everyone.',
-	args: 2,
-	usage: '<message> <append command list (true|false)>',
+	args: 1,
+	usage: '<message> [append command list (default: true)] [pin message (default: true)]',
 	msgType: CON.MSGTYPE.TEXT,
 	permLvl: CON.PERMLVL.ADMIN,
 	cooldown: 3,
 	deleteMsg: true,
 	async execute(message, args) {
 		let text = args[0];
+		if (typeof args[1] === 'undefined') args[1] = true;
 		args[1] = fnc.parseBool(args[1]);
-		if (args[1]) text += fnc.getCmdList(message.client, 'text', CON.PERMLVL.EVERYONE).reduce((txt, cmd) => txt + `\n● \`${cfg.prefix}${cmd[0]}\` ${cmd[1]}`, '');
+		if (args[1]) text += fnc.getCmdList(message.client, 'text', CON.PERMLVL.EVERYONE).reduce((txt, cmd) => txt + `\n● \`${fnc.getPrefix(message.guild)}${cmd[0]}\` ${cmd[1]}`, '');
+		if (typeof args[2] === 'undefined') args[2] = true;
+		args[2] = fnc.parseBool(args[2]);
 
 		try {
 			let welcomeMsg = null;
@@ -22,23 +26,23 @@ module.exports = {
 			if (welcomeMsgID) {
 				welcomeMsg = await message.channel.messages.fetch(welcomeMsgID.messageID).catch(async () => {
 					message.client.welcomeReacts.delete(welcomeMsgID.messageID);
-					await message.client.db.welcomeReacts.destroy({ where: { messageID: welcomeMsgID.messageID } });
+					message.client.reacts.delete(welcomeMsgID.messageID);
 					await welcomeMsgID.destroy();
 					return null;
 				});
 			}
 			if (welcomeMsg) {
 				await welcomeMsg.edit(text);
-				await message.client.db.welcomeMsgs.update({
+				await welcomeMsgID.update({
 					text: args[0],
 					cmdList: args[1],
-				},
-				{
+				}, {
 					where: { messageID: welcomeMsg.id },
 				});
 			}
 			else {
 				welcomeMsg = await message.channel.send(text);
+				if (args[2]) await welcomeMsg.pin();
 				await message.client.db.welcomeMsgs.create({
 					channelID: message.channel.id,
 					messageID: welcomeMsg.id,

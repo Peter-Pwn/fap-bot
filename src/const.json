@@ -13,5 +13,8 @@
 	"TEXTCLR": {
 		"ERROR": "#d2041d",
 		"WARN": "#d8d455"
-	}
+	},
+	"DATETIMEPAT": ["YYYY-MM-DD h:mm a Z", "YYYY-MM-DD H:mm Z", "DD-MM-YYYY h:mm a Z", "DD-MM-YYYY H:mm Z"],
+	"MAININTVL": 3600e3,
+	"NOTIFYTIME": 15
 }

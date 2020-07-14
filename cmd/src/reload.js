@@ -1,3 +1,5 @@
+const fs = require('fs');
+
 const CON = require('../../src/const.json');
 const fnc = require('../../fnc');
 
@@ -18,9 +20,9 @@ module.exports = {
 				try {
 					if (typeof fnc[func] !== 'function') throw new Error(`${func} is not a function`);
 					message.client.logger.info(`Reloading function ${func}`);
-					delete require.cache[require.resolve(`../fnc/src/${func}.js`)];
-					fnc[func] = require(`../fnc/src/${func}.js`);
-					fnc.replyExt(message, `function ${func} was reloaded`);
+					delete require.cache[require.resolve(`../../fnc/src/${func}.js`)];
+					fnc[func] = require(`../../fnc/src/${func}.js`);
+					fnc.replyExt(message, `function \`${func}\` was reloaded`);
 				}
 				catch (e) {
 					message.client.logger.error(`Couldn't reload function ${func}:\n${e.stack}`);
@@ -37,7 +39,7 @@ module.exports = {
 					const newCommand = require(`./${command.name}.js`);
 					newCommand.name = command.name;
 					message.client.commands.set(command.name, newCommand);
-					fnc.replyExt(message, `command ${command.name} was reloaded`);
+					fnc.replyExt(message, `command \`${command.name}\` was reloaded`);
 				}
 				catch (e) {
 					message.client.logger.error(`Couldn't reload command ${args[0]}:\n${e.name === 'Error' ? e.message : e.stack}`);
@@ -47,12 +49,14 @@ module.exports = {
 		}
 		else {
 			try {
-				message.client.logger.info('Reloading complete bot');
+				message.client.logger.info(`${message.author.username} is reloading complete bot.`);
 				delete require.cache[require.resolve('../../src/const.json')];
 				delete require.cache[require.resolve('../../src/config.js')];
 				message.client.commands.forEach(command => delete require.cache[require.resolve(`./${command.name}.js`)]);
 				delete require.cache[require.resolve('..')];
-				Object.getOwnPropertyNames(message.client.db).forEach(tbl => delete require.cache[require.resolve(`../../tbl/src/${tbl}.js`)]);
+				fs.readdirSync('./tbl/src').filter(file => file.endsWith('.js')).forEach(file => {
+					delete require.cache[require.resolve(`../../tbl/src/${file}`)];
+				});
 				Object.getOwnPropertyNames(fnc).forEach(func => delete require.cache[require.resolve(`../../fnc/src/${func}.js`)]);
 				delete require.cache[require.resolve('../../fnc')];
 				message.client.destroy();

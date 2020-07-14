@@ -7,16 +7,16 @@ module.exports = {
 			unique: true,
 			allowNull: false,
 		},
-		memberID: {
+		messageID: {
 			type: Sequelize.STRING(64),
+			unique: true,
 			allowNull: false,
 		},
-		limit: {
-			type: Sequelize.INTEGER,
-			defaultValue: 0,
+		text: {
+			type: Sequelize.TEXT,
 			allowNull: false,
 		},
-		permanent: {
+		cmdList: {
 			type: Sequelize.BOOLEAN,
 			defaultValue: false,
 			allowNull: false,
@@ -26,7 +26,23 @@ module.exports = {
 		indexes: [
 			{
 				fields: ['channelID'],
-				unique: false,
+				unique: true,
+			},
+			{
+				fields: ['messageID'],
+				unique: true,
+			},
+		],
+	},
+	associations: {
+		hasMany: [
+			{
+				table: 'welcomeReacts',
+				options: {
+					as: 'reacts',
+					sourceKey: 'messageID',
+					foreignKey: 'messageID',
+				},
 			},
 		],
 	},

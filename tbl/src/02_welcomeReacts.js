@@ -2,30 +2,23 @@ const Sequelize = require('sequelize');
 
 module.exports = {
 	attributes: {
-		channelID: {
-			type: Sequelize.STRING(64),
-			unique: true,
-			allowNull: false,
-		},
-		memberID: {
+		messageID: {
 			type: Sequelize.STRING(64),
 			allowNull: false,
 		},
-		limit: {
-			type: Sequelize.INTEGER,
-			defaultValue: 0,
+		emojiID: {
+			type: Sequelize.STRING(64),
 			allowNull: false,
 		},
-		permanent: {
-			type: Sequelize.BOOLEAN,
-			defaultValue: false,
+		roleID: {
+			type: Sequelize.STRING(64),
 			allowNull: false,
 		},
 	},
 	options: {
 		indexes: [
 			{
-				fields: ['channelID'],
+				fields: ['messageID'],
 				unique: false,
 			},
 		],

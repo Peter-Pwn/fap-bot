@@ -1,7 +1,7 @@
 const cfg = require('../../src/config.js');
 
 module.exports = async function(message, text, { mention = true, del = true, delay = 5, color } = {}) {
-	if (!message || !text) return;
+	if (!message || !text) return null;
 	if (typeof mention !== 'boolean') mention = true;
 	if (mention) text = message.author.toString() + ', ' + text;
 	if (typeof del !== 'boolean') del = true;
@@ -21,7 +21,7 @@ module.exports = async function(message, text, { mention = true, del = true, del
 			try {
 				await reply.react('❌');
 				await reply.awaitReactions((reaction, user) => reaction.emoji.name === '❌' && user.id !== message.client.user.id && (user.id === message.author.id || (message.guild && message.guild.members.cache.get(user.id).hasPermission(cfg.modPerm))),
-					{ max: 1, time: delay * 60000 })
+					{ max: 1, time: delay * 60e3 })
 					.then(() => reply.delete());
 			}
 			catch (e) {

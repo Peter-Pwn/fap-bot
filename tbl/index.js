@@ -3,12 +3,24 @@ try {
 	const fs = require('fs');
 	module.exports = sequelize => {
 		const db = {};
-		fs.readdirSync(`${module.path}/src`).filter(file => file.endsWith('.js')).forEach(file => {
-			db[file.slice(0, -3)] = sequelize.define(file.slice(0, -3), require(`./src/${file}`), { timestamps: false, freezeTableName: true });
+		fs.readdirSync(`${module.path}/src`).filter(file => file.endsWith('.js')).reverse().forEach(file => {
+			const table = require(`./src/${file}`);
+			const tblName = file.slice(file.indexOf('_') + 1, -3);
+			if (!table.options) table.options = {};
+			db[tblName] = sequelize.define(tblName, table.attributes, Object.assign({ timestamps: false, freezeTableName: true }, table.options));
+			if (table.associations) {
+				for (const rel in table.associations) {
+					table.associations[rel].forEach(tbl => {
+						if (!tbl.options) tbl.options = {};
+						if (typeof db[tblName][rel] === 'function' || sequelize.models[tbl.table]) db[tblName][rel](sequelize.models[tbl.table], tbl.options);
+					});
+				}
+			}
 		});
+		sequelize.sync();
 		return db;
 	};
 }
 catch (e) {
-	console.error(`[ERROR] Couldn't load functions:\n${e.stack}`);
+	console.error(`[ERROR] Couldn't load database:\n${e.stack}`);
 }

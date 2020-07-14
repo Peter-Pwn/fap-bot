@@ -1,12 +1,13 @@
 //load commands from disc
 try {
-	const Discord = require('discord.js');
 	const fs = require('fs');
+	const Discord = require('discord.js');
 	const CON = require('../src/const.json');
 	const commands = new Discord.Collection();
 	fs.readdirSync(`${module.path}/src`).filter(file => file.endsWith('.js')).forEach(file => {
 		try {
 			const command = require(`./src/${file}`);
+			if (command.skip) throw new Error('skipped');
 			if (command.aliases && !Array.isArray(command.aliases)) throw new Error('aliases is not a array');
 			if (typeof command.description !== 'string') throw new Error('description is not a string');
 			if (typeof command.descriptionLong !== 'string') command.descriptionLong = null;

@@ -1,4 +1,4 @@
 module.exports = function(arg) {
-	arg = arg.toString().toLowerCase();
-	return (arg === 'true' || arg === 't' || arg === 'yes' || arg === 'y' || arg == 1);
+	if (!arg) arg = '';
+	return ['true', 't', 'yes', 'y', '1'].includes(arg.toString().toLowerCase());
 };

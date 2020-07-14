@@ -1,6 +1,6 @@
 {
   "name": "fap-bot",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "fabulous and pointless discord bot",
   "main": "./src/index.js",
   "scripts": {
@@ -13,12 +13,13 @@
   "license": "ISC",
   "dependencies": {
     "discord.js": "^12.2.0",
+    "emoji-regex": "^8.0.0",
+    "moment": "^2.27.0",
+    "pg": "^8.2.1",
     "sequelize": "^5.21.12",
-    "winston": "^3.2.1",
-		"emoji-regex": "^8.0.0",
-		"pg": "^8.2.1"
+    "winston": "^3.2.1"
   },
-	"engines": {
+  "engines": {
     "node": "12.x"
   }
 }

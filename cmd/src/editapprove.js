@@ -7,10 +7,11 @@ const fnc = require('../../fnc');
 const eRegex = require('emoji-regex');
 
 module.exports = {
+	aliases: ['setapprove'],
 	description: 'Adds or removes Approve emojis to a welcome message in this channel.',
-	descriptionLong: `You need to set a welcome message using ${cfg.prefix}setwelcome first.\nRemoving a reaction doesn't remove the role from members.`,
+	descriptionLong: 'You need to set a welcome message using editwelcome first.\nRemoving a reaction doesn\'t remove the role from members.',
 	args: 2,
-	usage: `add <:emoji:> <@role> ... [:emoji:] [@role]\n${cfg.prefix}setapprove remove <:emoji:> ... [:emoji:]`,
+	usage: 'add <:emoji:> <@role> ... [:emoji:] [@role]\nremove <:emoji:> ... [:emoji:]',
 	msgType: CON.MSGTYPE.TEXT,
 	permLvl: CON.PERMLVL.ADMIN,
 	cooldown: 3,
@@ -23,13 +24,13 @@ module.exports = {
 				.then(async msg => welcomeMsg = await message.channel.messages.fetch(msg.messageID));
 		}
 		catch {
-			return fnc.replyExt(message, `You need to set a welcome message using ${cfg.prefix}setwelcome first.`, { color: CON.TEXTCLR.WARN });
+			return fnc.replyExt(message, `You need to set a welcome message using ${fnc.getPrefix(message.guild)}editwelcome first.`, { color: CON.TEXTCLR.WARN });
 		}
 
 		if (!message.client.welcomeReacts.has(welcomeMsg.id))	message.client.welcomeReacts.set(welcomeMsg.id, new Discord.Collection());
 		const welcomeReacts = message.client.welcomeReacts.get(welcomeMsg.id);
 
-		const emojiRegex = new RegExp('<:.+:(\\d+)>|(' + eRegex().source + ')');
+		const emojiRegex = RegExp('<:.+:(\\d+)>|(' + eRegex().source + ')');
 
 		if (args[0] === 'add') {
 			//check for pairs
@@ -58,9 +59,9 @@ module.exports = {
 				catch (e) {
 					if (e.name === 'SequelizeUniqueConstraintError') return;
 					if (e.name === 'DiscordAPIError' && e.message === 'Unknown Emoji') return fnc.replyExt(message, `${args[i]} is not a valid emoji`, { color: CON.TEXTCLR.WARN });
+					if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions' || e.message === 'Missing Access') return message.channel.send(`${message.guild.owner}, i don't have permission to add reactions here!`);
 					message.client.logger.error(e);
 				}
-
 			}
 		}
 		else if (args[0] === 'remove') {
@@ -72,7 +73,7 @@ module.exports = {
 
 				//remove the reaction from the collection and db
 				try {
-					if (!welcomeMsg.reactions.cache.hase(args[i])) continue;
+					if (!welcomeMsg.reactions.cache.has(args[i])) continue;
 					welcomeMsg.reactions.cache.get(args[i]).remove();
 					await message.client.db.welcomeReacts.destroy({ where: { messageID: welcomeMsg.id, emojiID: args[i] } });
 					welcomeReacts.delete(args[i]);
@@ -80,6 +81,7 @@ module.exports = {
 				catch (e) {
 					if (e.name === 'SequelizeUniqueConstraintError') return;
 					if (e.name === 'DiscordAPIError' && e.message === 'Unknown Emoji') return fnc.replyExt(message, `${args[i]} is not a valid emoji`, { color: CON.TEXTCLR.WARN });
+					if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions' || e.message === 'Missing Access') return message.channel.send(`${message.guild.owner}, i don't have permission to add reactions here!`);
 					message.client.logger.error(e);
 				}
 			}
