@@ -29,7 +29,7 @@ module.exports = {
 		else {
 			data.push(`**A list of commands you can use ${message.author}**\n`);
 			fnc.getCmdList(message.client, message.channel.type, fnc.getPerms(message.member || message.author)).forEach(cmd => data.push(`● \`${prefix}${cmd[0]}\` ${cmd[1]}`));
-			data.push(`\nYou can use \`${prefix}help [command name]\` to get info on a specific command.`);
+			data.push(`\nYou can use \`${prefix}help [command_name]\` to get info on a specific command.`);
 		}
 		fnc.replyExt(message, data.join('\n'), { mention: false, delay: 10 });
 	},

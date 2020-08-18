@@ -1,6 +1,7 @@
 const Discord = require('discord.js');
 const Sequelize = require('sequelize');
 const winston = require('winston');
+//require('winston-mail');
 //no file logging for now require('winston-daily-rotate-file');
 const moment = require('moment');
 
@@ -8,6 +9,8 @@ const CON = require('./const.json');
 const cfg = require('./config.js');
 const fnc = require('../fnc');
 const rnx = require('../rnx');
+
+moment.suppressDeprecationWarnings = !cfg.debug;
 
 //create discord client https://discord.js.org/#/docs/main/stable/class/ClientUser?scrollTo=setPresence
 const client = new Discord.Client({ presence: cfg.presence, partials: ['MESSAGE', 'REACTION'] });
@@ -17,17 +20,30 @@ const sequelize = new Sequelize(cfg.db_URI, { logging: false });
 client.logger = winston.createLogger({
 	transports: [
 		new winston.transports.Console(),
+		/*new winston.transports.Mail({
+			level: 'error',
+
+			to: '',
+			from: '',
+			host: '',
+			port: ,
+			username: '',
+			password: '',
+			subject: '{{level}} {{msg}})',
+			tls: { ciphers: 'SSLv3' },
+			html: false,
+
+		}),*/
+		/*no file logging for now
+		new winston.transports.DailyRotateFile({
+			level: 'warn',
+			dirname: cfg.logDir,
+			filename: `${cfg.appName}-%DATE%.log`,
+			datePattern: 'YYYY-MM',
+		}),*/
 	],
 	format: winston.format.printf(info => `[${info.level.toUpperCase()}] ${(info instanceof Error) ? info.stack : info.message}`),
 });
-/*no file logging for now
-new winston.transports.DailyRotateFile({
-	dirname: cfg.logDir,
-	filename: `${cfg.appName}-%DATE%.log`,
-	datePattern: 'YYYY-MM',
-	level: 'warn',
-}),
-*/
 
 client.db = require('../tbl')(sequelize);
 //sequelize.sync();
@@ -182,7 +198,6 @@ client.on('mainInterval', (init = false) => {
 					const channel = await client.channels.fetch(raid.channelID || '0');
 					const message = await channel.messages.fetch(raid.messageID || '0');
 					await message.delete();
-					client.db.raids.update(raid, { where: { messageID: raidID }, include: ['members'] });
 					client.db.raidMembers.destroy({ where: { messageID: raidID } });
 					client.raids.delete(raidID);
 					client.reacts.delete(raidID);
@@ -194,8 +209,12 @@ client.on('mainInterval', (init = false) => {
 						await raidMsg.react('🆔');
 						raid.channelID = raidMsg.channel.id;
 						raid.messageID = raidMsg.id;
+						client.db.raids.update(raid, { where: { messageID: raidID }, include: ['members'] });
 						client.raids.set(raidMsg.id, raid);
 						client.reacts.set(raidMsg.id, rnx.raid);
+					}
+					else {
+						client.db.raids.destroy({ where: { messageID: raidID } });
 					}
 				}
 				catch (e) {
@@ -209,7 +228,7 @@ client.on('mainInterval', (init = false) => {
 
 	if (!init) {
 		//do cleanup stuff
-		console.log('cleanup');
+		//console.log('cleanup');
 	}
 });
 
@@ -332,3 +351,4 @@ process.on('SIGINT', () => {
 
 //connect to discord
 client.login(cfg.token);
+//willfail();

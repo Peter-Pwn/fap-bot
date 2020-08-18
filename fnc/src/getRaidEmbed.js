@@ -18,7 +18,7 @@ module.exports = function(channel, raid) {
 		fields: [
 			{
 				name: 'Time',
-				value: `${raid.time.format('ddd, MMM D YYYY H:mm')} (UTC${raid.time.format('Z').replace(/(?<=[-+])0|:00/g, '')})`,
+				value: `${raid.time.format('ddd, MMM D YYYY H:mm')} (UTC${raid.time.format('Z').replace(/\+00|(?<=[-+])0|:00/g, '')})`,
 			},
 			{
 				name: `Reserved (${reserved.length}/${raid.count})`,
@@ -32,7 +32,8 @@ module.exports = function(channel, raid) {
 			},
 		],
 		footer: {
-			text: '✅ drop in/out - 🆔 get id',
+			text: '✅ drop in/out - 🆔 get id\nYour time',
 		},
+		timestamp: raid.time.toDate(),
 	};
 };

@@ -8,7 +8,7 @@ try {
 		cfg = {
 			appName: process.env.appName,
 			appLongName: process.env.appLongName,
-			debug: process.env.debug,
+			debug: process.env.debug || false,
 			logDir: process.env.logDir,
 			prefix: process.env.prefix,
 			owners: process.env.owners.split(','),
