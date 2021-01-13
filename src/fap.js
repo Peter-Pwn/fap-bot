@@ -236,8 +236,10 @@ client.on('mainInterval', (init = false) => {
 
 client.once('ready', async () => {
 	//check for required guild permissions
-	client.guilds.cache.forEach(g => {
+	/* disabled for now
+	client.guilds.cache.forEach(async g => {
 		if (!g.me.permissions.has(CON.RQDPERMS)) {
+			if (!g.owner) await g.members.fetch(g.ownerID);
 			if (g.owner) {
 				let text = `Hey ${g.owner}, i don't have the required permissions on \`${g.name}\`.\n`;
 				text += 'I\'m missing the following permissions:\n`';
@@ -246,12 +248,13 @@ client.once('ready', async () => {
 				g.owner.send(text);
 			}
 			else {
-				let text = `Missing the following permissions on ${g.name}:\n`;
+				let text = `Missing the following permissions on "${g.name}":\n`;
 				text += g.me.permissions.missing(CON.RQDPERMS).join('\n').replace(/_/g, ' ');
 				client.logger.warn(text);
 			}
 		}
 	});
+	*/
 
 	//get guilds from db
 	await client.db.guilds.findAll({ raw: true }).then(guilds => guilds.forEach(guild => client.guildCfg.set(guild.guildID, guild)));
