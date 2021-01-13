@@ -20,7 +20,7 @@ module.exports = async function(message, text, { mention = true, del = true, del
 		if (del) {
 			try {
 				await reply.react('❌');
-				await reply.awaitReactions((reaction, user) => reaction.emoji.name === '❌' && user.id !== message.client.user.id && (user.id === message.author.id || (message.guild && message.guild.members.cache.get(user.id).hasPermission(cfg.modPerm))),
+				reply.awaitReactions((reaction, user) => reaction.emoji.name === '❌' && user.id !== message.client.user.id && (user.id === message.author.id || (message.guild && message.guild.members.cache.get(user.id).hasPermission(cfg.modPerm))),
 					{ max: 1, time: delay * 60e3 })
 					.then(() => reply.delete());
 			}

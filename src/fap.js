@@ -81,7 +81,7 @@ client.on('message', async message => {
 	if (command.permLvl === CON.PERMLVL.OWNER && !cfg.owners.includes(message.author.id)) return;
 
 	if (message.channel.type === 'text' && command.msgType & CON.MSGTYPE.TEXT) {
-		if (command.deleteMsg === true)	message.delete();
+		//if (command.deleteMsg === true)	message.delete();
 		if (!(fnc.getPerms(message.member) & command.permLvl)) return fnc.replyExt(message, 'you don\'t have the permission to use this command', { color: CON.TEXTCLR.WARN });
 	}
 	else if (message.channel.type === 'dm' && command.msgType & CON.MSGTYPE.DM) {
@@ -111,9 +111,11 @@ client.on('message', async message => {
 	timestamps.set(message.author.id, now + cooldown);
 	client.setTimeout(() => timestamps.delete(message.author.id), cooldown);
 
-	//execute the command
+	//execute the command and delete command message
 	try {
-		command.execute(message, args);
+		(command.execute(message, args) || Promise.resolve(null)).then((r) => {
+			if (r && command.deleteMsg === true) message.delete();
+		});
 	}
 	catch (e) {
 		return client.logger.error(`Couldn't execute command ${command.name}:\n${e.stack}`);
@@ -236,11 +238,18 @@ client.once('ready', async () => {
 	//check for required guild permissions
 	client.guilds.cache.forEach(g => {
 		if (!g.me.permissions.has(CON.RQDPERMS)) {
-			let text = `Hey ${g.owner}, i don't have the required permissions on \`${g.name}\`.\n`;
-			text += 'I\'m missing the following permissions:\n`';
-			text += g.me.permissions.missing(CON.RQDPERMS).join('\n').replace(/_/g, ' ');
-			text += '`\nPlease make sure i also have these in the individual channels.';
-			g.owner.send(text);
+			if (g.owner) {
+				let text = `Hey ${g.owner}, i don't have the required permissions on \`${g.name}\`.\n`;
+				text += 'I\'m missing the following permissions:\n`';
+				text += g.me.permissions.missing(CON.RQDPERMS).join('\n').replace(/_/g, ' ');
+				text += '`\nPlease make sure i also have these in the individual channels.';
+				g.owner.send(text);
+			}
+			else {
+				let text = `Missing the following permissions on ${g.name}:\n`;
+				text += g.me.permissions.missing(CON.RQDPERMS).join('\n').replace(/_/g, ' ');
+				client.logger.warn(text);
+			}
 		}
 	});
 

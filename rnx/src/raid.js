@@ -13,7 +13,7 @@ module.exports = {
 			member.save();
 		}
 		else if (reaction.emoji.name === '🆔') {
-			if (fnc.getPerms(reaction.message.guild.members.cache.get(user.id)) & CON.PERMLVL.MOD) fnc.replyExt(reaction.message, `id: ${reaction.message.id}`, { mention: false });
+			if (fnc.getPerms(reaction.message.guild.members.cache.get(user.id)) & CON.PERMLVL.MOD) fnc.replyExt(reaction.message, `raid message id: ${reaction.message.id}`, { mention: false });
 			reaction.users.remove(user.id);
 		}
 	},

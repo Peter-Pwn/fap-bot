@@ -17,7 +17,7 @@ module.exports = {
 			args[0] = args[0].replace(/^\[?!?|\]$/g, '').toLowerCase();
 			const command = message.client.commands.get(args[0]) || message.client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(args[0]));
 			if (!command) return fnc.replyExt(message, `${args[0]} is not a command`, { color: CON.TEXTCLR.WARN });
-			if (!(fnc.getPerms(message.member || message.author) & command.permLvl)) return;
+			if (!(fnc.getPerms(message.member || message.author) & command.permLvl)) return true;
 			data.push(`**${prefix}${args[0]}**\n`);
 			if (command.aliases) data.push(`\`Aliases:\` ${command.name}, ${command.aliases.join(', ')}`);
 			data.push(`\`Description:\` ${command.description}`);
@@ -31,6 +31,6 @@ module.exports = {
 			fnc.getCmdList(message.client, message.channel.type, fnc.getPerms(message.member || message.author)).forEach(cmd => data.push(`● \`${prefix}${cmd[0]}\` ${cmd[1]}`));
 			data.push(`\nYou can use \`${prefix}help [command_name]\` to get info on a specific command.`);
 		}
-		fnc.replyExt(message, data.join('\n'), { mention: false, delay: 10 });
+		return fnc.replyExt(message, data.join('\n'), { mention: false, delay: 10 });
 	},
 };

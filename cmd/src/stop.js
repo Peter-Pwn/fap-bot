@@ -6,8 +6,9 @@ module.exports = {
 	msgType: CON.MSGTYPE.TEXT | CON.MSGTYPE.DM,
 	permLvl: CON.PERMLVL.OWNER,
 	cooldown: 3,
-	deleteMsg: true,
+	deleteMsg: false,
 	execute(message) {
+		message.delete();
 		message.client.logger.info(`${message.author.username} is shutting down the bot.`);
 		message.client.destroy();
 	},

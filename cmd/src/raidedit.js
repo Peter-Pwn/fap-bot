@@ -5,10 +5,11 @@ const rnx = require('../../rnx');
 const moment = require('moment');
 
 module.exports = {
-	description: 'Creates or edits a raid.',
-	descriptionLong: 'For a new raid set the first argument to new, if you want to edit a raid supply the discord message id of the raid.\nThe date format is YYYY-MM-DD h:mm Z. Z is the timezone.\nIf you edit a raid, empty arguments ("") are loaded from the database and won\'t be changed.',
+	aliases: ['editraid'],
+	description: 'Edits a raid.',
+	descriptionLong: 'Supply the discord message id of the raid.\nThe date format is "YYYY-MM-DD h:mm Z". Z is the timezone.\nEmpty arguments ("") are loaded from the database and won\'t be changed.',
 	args: 5,
-	usage: '<new|message ID> <title> <description> <player count> <date & time> [repeat interval (days)] [role to remind]',
+	usage: '<message ID> <title> <description> <player count> <date & time> [repeat interval (days)] [role to remind]',
 	msgType: CON.MSGTYPE.TEXT,
 	permLvl: CON.PERMLVL.MOD,
 	cooldown: 3,
@@ -41,18 +42,18 @@ text" 4 "2020.08.27 20:30 +2" 1
 			}
 
 			//check for valid values
-			if (!args[1]) return fnc.replyExt(message, 'the title can\'t be empty', { color: CON.TEXTCLR.WARN });
+			if (!args[1]) return fnc.replyExt(message, 'the title can\'t be empty', { color: CON.TEXTCLR.WARN }) && false;
 			args[3] = parseInt(args[3]);
-			if (isNaN(args[3]) || args[3] < 1) return fnc.replyExt(message, 'player count must be a positive number', { color: CON.TEXTCLR.WARN });
+			if (isNaN(args[3]) || args[3] < 1) return fnc.replyExt(message, 'player count must be a positive number', { color: CON.TEXTCLR.WARN }) && false;
 			if (!(args[4] instanceof moment)) args[4] = moment.parseZone(args[4].replace(/[-+]([1-9])(?:\b|:)/, '+0$1'), CON.DATETIMEPAT);
-			if (!args[4].isValid() || args[4].isBefore(moment())) return fnc.replyExt(message, 'date & time is not valid date', { color: CON.TEXTCLR.WARN });
+			if (!args[4].isValid() || args[4].isBefore(moment())) return fnc.replyExt(message, 'date & time is not valid date', { color: CON.TEXTCLR.WARN }) && false;
 			//TODO: check if date is in the future?
 			if (!args[5] && args[5] !== 0) args[5] = 0;
 			args[5] = parseInt(args[5]);
-			if (isNaN(args[5]) || args[5] < 0) return fnc.replyExt(message, 'repeat interval must be a full number', { color: CON.TEXTCLR.WARN });
+			if (isNaN(args[5]) || args[5] < 0) return fnc.replyExt(message, 'repeat interval must be a full number', { color: CON.TEXTCLR.WARN }) && false;
 			if (args[6] && !message.guild.roles.cache.has(args[6])) {
 				args[6] = args[6].match(/<@&(\d+)>/);
-				if (!args[6]) return fnc.replyExt(message, 'you have an error in your role', { color: CON.TEXTCLR.WARN });
+				if (!args[6]) return fnc.replyExt(message, 'you have an error in your role', { color: CON.TEXTCLR.WARN }) && false;
 				args[6] = args[6][1];
 			}
 
@@ -84,9 +85,10 @@ text" 4 "2020.08.27 20:30 +2" 1
 			message.client.emit('mainInterval', true);
 		}
 		catch (e) {
-			if (e.name === 'DiscordAPIError' || e.name === 'Error' && e.message === 'Unknown Message') return fnc.replyExt(message, 'raid message not found', { color: CON.TEXTCLR.WARN });
+			if (e.name === 'DiscordAPIError' || e.name === 'Error' && e.message === 'Unknown Message') return fnc.replyExt(message, 'raid message not found', { color: CON.TEXTCLR.WARN }) && false;
 			if (e.name === 'RangeError [EMBED_FIELD_VALUE]') return message.client.logger.error(`Error sending raid embed:\n${e.stack}`);
 			return message.client.logger.error(e);
 		}
+		return true;
 	},
 };

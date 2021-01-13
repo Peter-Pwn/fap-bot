@@ -1,9 +1,9 @@
 const CON = require('../../src/const.json');
-const cfg = require('../../src/config.js');
+//const cfg = require('../../src/config.js');
 const fnc = require('../../fnc');
 
 module.exports = {
-	aliases: ['setwelcome'],
+	aliases: ['editwelcome', 'welcomeadd', 'addwelcome'],
 	description: 'Sets a welcome message in this channel.',
 	descriptionLong: 'You can let the bot append a list of all the commands available for everyone.',
 	args: 1,
@@ -58,5 +58,6 @@ module.exports = {
 			}
 			return message.client.logger.error(e);
 		}
+		return true;
 	},
 };

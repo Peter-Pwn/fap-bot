@@ -13,7 +13,7 @@ module.exports = {
 	async execute(message, args) {
 		args[0] = parseInt(args[0]) + 1;
 		if (isNaN(args[0]) || args[0] < 2 || args[0] > 100) {
-			if (message.channel.type === 'text') message.delete();
+			//if (message.channel.type === 'text') message.delete();
 			return fnc.replyExt(message, 'you need to input a number between 1 and 99', { color: CON.TEXTCLR.WARN });
 		}
 
@@ -35,5 +35,6 @@ module.exports = {
 				await msg.delete();
 			}
 		}
+		return true;
 	},
 };

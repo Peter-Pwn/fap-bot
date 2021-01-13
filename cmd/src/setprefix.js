@@ -2,7 +2,6 @@ const CON = require('../../src/const.json');
 const fnc = require('../../fnc');
 
 module.exports = {
-	aliases: ['hey', 'hi', 'h'],
 	description: 'Sets the prefix for a guild.',
 	descriptionLong: 'The prefix must be one character long.',
 	args: 1,
