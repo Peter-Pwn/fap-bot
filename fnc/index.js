@@ -1,12 +1,20 @@
 //load functions from disc
-try {
-	const fs = require('fs');
-	const functions = {};
-	fs.readdirSync(`${module.path}/src`).filter(file => file.endsWith('.js')).forEach(file => {
-		functions[file.slice(0, -3)] = require(`./src/${file}`);
-	});
-	module.exports = functions;
-}
-catch (e) {
-	console.error(`[ERROR] Couldn't load functions:\n${e.stack}`);
-}
+const fs = require('fs');
+
+const path = `${module.path}/src`;
+const functions = {};
+fs.readdirSync(path, { withFileTypes: true }).filter(dirent => dirent.isDirectory() || dirent.name.endsWith('.js')).forEach(dirent => {
+	if (dirent.isDirectory()) {
+		const dir = fs.readdirSync(`${path}/${dirent.name}`).filter(file => file.endsWith('.js'));
+		if (dir.length > 0) {
+			functions[dirent.name] = {};
+			dir.forEach(file => {
+				functions[dirent.name][file.slice(0, -3)] = require(`${path}/${dirent.name}/${file}`);
+			});
+		}
+	}
+	else {
+		functions[dirent.name.slice(0, -3)] = require(`${path}/${dirent.name}`);
+	}
+});
+module.exports = functions;

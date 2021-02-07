@@ -1,12 +1,23 @@
 //load commands from disc
-try {
-	const fs = require('fs');
-	const Discord = require('discord.js');
-	const CON = require('../src/const.json');
-	const commands = new Discord.Collection();
-	fs.readdirSync(`${module.path}/src`).filter(file => file.endsWith('.js')).forEach(file => {
+const fs = require('fs');
+const Discord = require('discord.js');
+const CON = require(`${require.main.path}/src/const.json`);
+
+const path = `${module.path}/src/`;
+const commands = new Discord.Collection();
+fs.readdirSync(path, { withFileTypes: true }).filter(dirent => dirent.isDirectory() || dirent.name.endsWith('.js')).forEach(dirent => {
+	const files = [];
+	if (dirent.isDirectory()) {
+		fs.readdirSync(`${path}/${dirent.name}`).filter(file => file.endsWith('.js')).forEach(file => {
+			files.push([`${dirent.name}${file.slice(0, -3)}`, `${dirent.name}/${file}`]);
+		});
+	}
+	else {
+		files.push([dirent.name.slice(0, -3), dirent.name]);
+	}
+	for (const file of files) {
 		try {
-			const command = require(`./src/${file}`);
+			const command = require(`${path}/${file[1]}`);
 			if (command.skip) throw new Error('skipped');
 			if (command.aliases && !Array.isArray(command.aliases)) throw new Error('aliases is not a array');
 			if (typeof command.description !== 'string') throw new Error('description is not a string');
@@ -18,15 +29,13 @@ try {
 			if (typeof command.cooldown !== 'number') command.cooldown = 3;
 			if (typeof command.deleteMsg !== 'boolean') command.deleteMsg = true;
 			if (typeof command.execute !== 'function') throw new Error('execute is not a function');
-			command.name = file.slice(0, -3);
+			command.name = file[0].toLowerCase();
+			command.file = file[1];
 			commands.set(command.name, command);
 		}
 		catch (e) {
-			return console.log(`[WARN] Couldn't load command ${file.slice(0, -3)}:\n${e.name}: ${e.message}`);
+			console.log(`[WARN] Couldn't load command ${file[0].toLowerCase()}:\n${e.name}: ${e.message}`);
 		}
-	});
-	module.exports = commands;
-}
-catch (e) {
-	console.error(`[ERROR] Couldn't load commands:\n${e.stack}`);
-}
+	}
+});
+module.exports = commands;

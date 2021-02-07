@@ -1,6 +1,6 @@
-const CON = require('../../src/const.json');
-const fnc = require('../../fnc');
-const rnx = require('../../rnx');
+const CON = require(`${require.main.path}/src/const.json`);
+const fnc = require(`${require.main.path}/fnc`);
+const rnx = require(`${require.main.path}/rnx`);
 
 const moment = require('moment');
 
@@ -42,18 +42,18 @@ text" 4 "2020.08.27 20:30 +2" 1
 			}
 
 			//check for valid values
-			if (!args[1]) return fnc.replyExt(message, 'the title can\'t be empty', { color: CON.TEXTCLR.WARN }) && false;
+			if (!args[1]) return fnc.replyWarn(message, 'the title can\'t be empty');
+			if (args[1].lenght > 255) return fnc.replyWarn(message, 'the title must be 255 or fewer in length');
 			args[3] = parseInt(args[3]);
-			if (isNaN(args[3]) || args[3] < 1) return fnc.replyExt(message, 'player count must be a positive number', { color: CON.TEXTCLR.WARN }) && false;
+			if (isNaN(args[3]) || args[3] < 1) return fnc.replyWarn(message, 'player count must be a positive number');
 			if (!(args[4] instanceof moment)) args[4] = moment.parseZone(args[4].replace(/[-+]([1-9])(?:\b|:)/, '+0$1'), CON.DATETIMEPAT);
-			if (!args[4].isValid() || args[4].isBefore(moment())) return fnc.replyExt(message, 'date & time is not valid date', { color: CON.TEXTCLR.WARN }) && false;
-			//TODO: check if date is in the future?
+			if (!args[4].isValid() || args[4].isBefore(moment())) return fnc.replyWarn(message, 'date & time is not valid date');
 			if (!args[5] && args[5] !== 0) args[5] = 0;
 			args[5] = parseInt(args[5]);
-			if (isNaN(args[5]) || args[5] < 0) return fnc.replyExt(message, 'repeat interval must be a full number', { color: CON.TEXTCLR.WARN }) && false;
+			if (isNaN(args[5]) || args[5] < 0) return fnc.replyWarn(message, 'repeat interval must be a full number');
 			if (args[6] && !message.guild.roles.cache.has(args[6])) {
 				args[6] = args[6].match(/<@&(\d+)>/);
-				if (!args[6]) return fnc.replyExt(message, 'you have an error in your role', { color: CON.TEXTCLR.WARN }) && false;
+				if (!args[6]) return fnc.replyWarn(message, 'you have an error in your role');
 				args[6] = args[6][1];
 			}
 
@@ -68,7 +68,6 @@ text" 4 "2020.08.27 20:30 +2" 1
 			//send raid message with embed and write to db
 			if (args[0] === 'new') {
 				raid.set('members', []);
-				//TODO: permission chatch
 				raidMsg = await message.channel.send(null, { embed: fnc.getRaidEmbed(message.channel, raid.get({ plain: true })) });
 				await raidMsg.react('✅');
 				await raidMsg.react('🆔');
@@ -85,9 +84,9 @@ text" 4 "2020.08.27 20:30 +2" 1
 			message.client.emit('mainInterval', true);
 		}
 		catch (e) {
-			if (e.name === 'DiscordAPIError' || e.name === 'Error' && e.message === 'Unknown Message') return fnc.replyExt(message, 'raid message not found', { color: CON.TEXTCLR.WARN }) && false;
+			if (e.name === 'DiscordAPIError' || e.name === 'Error' && e.message === 'Unknown Message') return fnc.replyWarn(message, 'raid message not found');
 			if (e.name === 'RangeError [EMBED_FIELD_VALUE]') return message.client.logger.error(`Error sending raid embed:\n${e.stack}`);
-			return message.client.logger.error(e);
+			throw e;
 		}
 		return true;
 	},

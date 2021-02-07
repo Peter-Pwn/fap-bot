@@ -1,4 +1,5 @@
 const Sequelize = require('sequelize');
+const moment = require('moment');
 
 module.exports = {
 	attributes: {
@@ -6,25 +7,29 @@ module.exports = {
 			type: Sequelize.STRING(64),
 			allowNull: false,
 		},
-		memberID: {
+		messageID: {
 			type: Sequelize.STRING(64),
 			allowNull: false,
 		},
-		limit: {
-			type: Sequelize.INTEGER,
-			defaultValue: 0,
+		time: {
+			type: Sequelize.STRING(25),
 			allowNull: false,
-		},
-		permanent: {
-			type: Sequelize.BOOLEAN,
-			defaultValue: false,
-			allowNull: false,
+			get() {
+				return moment.parseZone(this.getDataValue('time') || 0);
+			},
+			set(val) {
+				this.setDataValue('time', val instanceof moment ? val.format() : val);
+			},
 		},
 	},
 	options: {
 		indexes: [
 			{
 				fields: ['channelID'],
+				unique: false,
+			},
+			{
+				fields: ['messageID'],
 				unique: true,
 			},
 		],

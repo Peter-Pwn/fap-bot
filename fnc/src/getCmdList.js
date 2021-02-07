@@ -1,4 +1,4 @@
-const CON = require('../../src/const.json');
+const CON = require(`${require.main.path}/src/const.json`);
 
 module.exports = function(client, type, perms) {
 	const list = [];

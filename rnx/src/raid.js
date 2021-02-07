@@ -1,5 +1,5 @@
-const CON = require('../../src/const.json');
-const fnc = require('../../fnc');
+const CON = require(`${require.main.path}/src/const.json`);
+const fnc = require(`${require.main.path}/fnc`);
 
 module.exports = {
 	add: function(reaction, user) {

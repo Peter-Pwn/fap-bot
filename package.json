@@ -1,23 +1,26 @@
 {
   "name": "fap-bot",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "fabulous and pointless discord bot",
-  "main": "./src/index.js",
+  "main": "./index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node ./src/index.js",
+    "start": "node .",
+    "debug": "node --inspect .",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
   "author": "Peter-Pwn",
   "license": "ISC",
-  "dependencies": {
-    "discord.js": "^12.2.0",
-    "emoji-regex": "^8.0.0",
-    "moment": "^2.27.0",
-    "pg": "^8.2.1",
+	"dependencies": {
+		"discord.js": "^12.5.1",
+    "axios": "^0.21.1",
+    "moment": "^2.29.1",
     "sequelize": "^5.21.12",
-    "winston": "^3.2.1"
+    "winston": "^3.2.1",
+    "winston-daily-rotate-file": "^4.5.0",
+		"tar": "^4.4.13",
+		"emoji-regex": "^8.0.0"
   },
   "engines": {
     "node": "12.x"

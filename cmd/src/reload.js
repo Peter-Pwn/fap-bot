@@ -1,7 +1,7 @@
 const fs = require('fs');
 
-const CON = require('../../src/const.json');
-const fnc = require('../../fnc');
+const CON = require(`${require.main.path}/src/const.json`);
+const fnc = require(`${require.main.path}/fnc`);
 
 module.exports = {
 	aliases: ['r'],
@@ -13,20 +13,30 @@ module.exports = {
 	permLvl: CON.PERMLVL.OWNER,
 	cooldown: 10,
 	deleteMsg: true,
-	execute(message, args) {
+	async execute(message, args) {
 		if (args.length) {
 			if (args[0].startsWith('f:')) {
-				const func = args[0].replace(/^f:/, '');
+				args[0] = args[0].replace(/^f:/, '');
+				const func = args[0].match(/(\w+)\.?(\w+)?/);
+				if (!func) throw new Error(`${args[0]} is not a function`);
 				try {
-					if (typeof fnc[func] !== 'function') throw new Error(`${func} is not a function`);
-					message.client.logger.info(`Reloading function ${func}`);
-					delete require.cache[require.resolve(`../../fnc/src/${func}.js`)];
-					fnc[func] = require(`../../fnc/src/${func}.js`);
-					return fnc.replyExt(message, `function \`${func}\` was reloaded`);
+					if (func[2]) {
+						if (typeof fnc[func[1]] !== 'object' && typeof fnc[func[1]][func[2]] !== 'function') throw new Error(`\`${args[0]}\` is not a function`);
+						message.client.logger.info(`Reloading function ${args[0]}`);
+						delete require.cache[require.resolve(`${require.main.path}/fnc/src/${func[1]}/${func[2]}.js`)];
+						fnc[func[1]][func[2]] = require(`${require.main.path}/fnc/src/${func[1]}/${func[2]}.js`);
+					}
+					else {
+						if (typeof fnc[func[1]] !== 'function') throw new Error(`\`${args[0]}\` is not a function`);
+						message.client.logger.info(`Reloading function ${args[0]}`);
+						delete require.cache[require.resolve(`${require.main.path}/fnc/src/${func[1]}.js`)];
+						fnc[func] = require(`${require.main.path}/fnc/src/${func[1]}.js`);
+					}
+					return fnc.replyExt(message, `function \`${args[0]}\` was reloaded`);
 				}
 				catch (e) {
-					message.client.logger.error(`Couldn't reload function ${func}:\n${e.stack}`);
-					return fnc.replyExt(message, `there was an error while reloading function ${func}:\n\`${e.message}\``, { color: CON.TEXTCLR.ERROR }) && false;
+					if (e.name !== 'Error') message.client.logger.error(`Couldn't reload function ${args[0]}:\n${e.name === 'Error' ? e.message : e.stack}`);
+					fnc.replyWarn(message, `there was an error while reloading function \`${args[0]}\``, { color: CON.TEXTCLR.ERROR });
 				}
 			}
 			else {
@@ -35,41 +45,62 @@ module.exports = {
 					const command = message.client.commands.get(args[0]);
 					if (!command) throw new Error(`${args[0]} is not a command`);
 					message.client.logger.info(`Reloading command ${command.name}`);
-					delete require.cache[require.resolve(`./${command.name}.js`)];
-					const newCommand = require(`./${command.name}.js`);
+					delete require.cache[require.resolve(`${require.main.path}/cmd/src/${command.file}`)];
+					const newCommand = require(`${require.main.path}/cmd/src/${command.file}`);
+					if (newCommand.skip) throw new Error('skipped');
+					if (newCommand.aliases && !Array.isArray(newCommand.aliases)) throw new Error('aliases is not a array');
+					if (typeof newCommand.description !== 'string') throw new Error('description is not a string');
+					if (typeof newCommand.descriptionLong !== 'string') newCommand.descriptionLong = null;
+					if (typeof parseInt(newCommand.args) !== 'number') newCommand.args = 0;
+					if (newCommand.args > 0 && typeof newCommand.usage !== 'string') throw new Error('usage is not a string');
+					if (typeof newCommand.msgType !== 'number') newCommand.msgType = CON.MSGTYPE.TEXT;
+					if (typeof newCommand.permLvl !== 'number') newCommand.permLvl = CON.MSGTYPE.EVERYONE;
+					if (typeof newCommand.cooldown !== 'number') newCommand.cooldown = 3;
+					if (typeof newCommand.deleteMsg !== 'boolean') newCommand.deleteMsg = true;
+					if (typeof newCommand.execute !== 'function') throw new Error('execute is not a function');
 					newCommand.name = command.name;
+					newCommand.file = command.file;
 					message.client.commands.set(command.name, newCommand);
 					return fnc.replyExt(message, `command \`${command.name}\` was reloaded`);
 				}
 				catch (e) {
-					message.client.logger.error(`Couldn't reload command ${args[0]}:\n${e.name === 'Error' ? e.message : e.stack}`);
-					return fnc.replyExt(message, `there was an error while reloading command ${args[0]}:\n\`${e.message}\``, { color: CON.TEXTCLR.ERROR }) && false;
+					if (e.name !== 'Error') message.client.logger.error(`Couldn't reload command ${args[0]}:\n${e.name === 'Error' ? e.message : e.stack}`);
+					fnc.replyWarn(message, `there was an error while reloading command \`${args[0]}\``, { color: CON.TEXTCLR.ERROR });
 				}
 			}
 		}
 		else {
 			try {
-				message.client.logger.info(`${message.author.username} is reloading complete bot.`);
-				delete require.cache[require.resolve('../../src/const.json')];
-				delete require.cache[require.resolve('../../src/config.js')];
-				message.client.commands.forEach(command => delete require.cache[require.resolve(`./${command.name}.js`)]);
-				delete require.cache[require.resolve('..')];
-				fs.readdirSync('./tbl/src').filter(file => file.endsWith('.js')).forEach(file => {
-					delete require.cache[require.resolve(`../../tbl/src/${file}`)];
+				message.client.logger.info(`'${message.author.tag}' is reloading the complete bot.`);
+				delete require.cache[require.resolve(`${require.main.path}/src/const.json`)];
+				delete require.cache[require.resolve(`${require.main.path}/src/config.js`)];
+				fs.readdirSync(`${require.main.path}/tbl/src`).filter(file => file.endsWith('.js')).forEach(file => {
+					delete require.cache[require.resolve(`${require.main.path}/tbl/src/${file}`)];
 				});
-				Object.getOwnPropertyNames(fnc).forEach(func => delete require.cache[require.resolve(`../../fnc/src/${func}.js`)]);
-				delete require.cache[require.resolve('../../fnc')];
-				message.delete();
+				message.client.commands.forEach(command => delete require.cache[require.resolve(`${require.main.path}/cmd/src/${command.file}`)]);
+				delete require.cache[require.resolve(`${require.main.path}/cmd/`)];
+				Object.keys(fnc).forEach(func => {
+					if (typeof fnc[func] === 'object') {
+						Object.keys(fnc[func]).forEach(sub => {
+							delete require.cache[require.resolve(`${require.main.path}/fnc/src/${func}/${sub}.js`)];
+						});
+					}
+					else {
+						delete require.cache[require.resolve(`${require.main.path}/fnc/src/${func}.js`)];
+					}
+				});
+				delete require.cache[require.resolve(`${require.main.path}/fnc`)];
+				await message.delete();
 				message.client.destroy();
 				require.main.exports.load();
 			}
 			catch (e) {
 				if (message) {
-					message.client.logger.error(`Couldn't reload bot:\n${e.stack}`);
-					fnc.replyExt(message, `there was an error while reloading the bot:\n\`${e.stack}\``, { color: CON.TEXTCLR.ERROR });
+					message.client.logger.error(`Couldn't reload bot:\n${e.name === 'Error' ? e.message : e.stack}`);
+					fnc.replyWarn(message, 'there was an error while reloading the bot.', { color: CON.TEXTCLR.ERROR });
 				}
 				else {
-					console.error(`[ERROR] Couldn't reload bot:\n${e.stack}`);
+					console.error(`[ERROR] Couldn't reload bot:\n${e.name === 'Error' ? e.message : e.stack}`);
 				}
 			}
 		}

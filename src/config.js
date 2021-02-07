@@ -21,6 +21,7 @@ try {
 }
 catch (e) {
 	console.error(`Couldn't load config:\n${e.stack}`);
+	throw e;
 }
 
 module.exports = cfg;

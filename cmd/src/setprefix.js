@@ -1,5 +1,5 @@
-const CON = require('../../src/const.json');
-const fnc = require('../../fnc');
+const CON = require(`${require.main.path}/src/const.json`);
+const fnc = require(`${require.main.path}/fnc`);
 
 module.exports = {
 	description: 'Sets the prefix for a guild.',
@@ -12,7 +12,7 @@ module.exports = {
 	deleteMsg: true,
 	async execute(message, args) {
 		//more checks to do?!
-		if (!args[0] || args[0].length !== 1) return fnc.replyExt(message, `${args[0]} is not a valid Prefix.`);
+		if (!args[0] || args[0].length !== 1) return fnc.replyWarn(message, `\`${args[0]}\` is not a valid Prefix.`);
 		const guild = {
 			guildID: message.guild.id,
 			prefix: args[0],
@@ -30,15 +30,11 @@ module.exports = {
 			}
 			catch (e) {
 				//message not found
-				if (e.name === 'DiscordAPIError' && e.message === 'Unknown Message') {
-					await msg.destroy();
-				}
-				else {
-					message.client.logger.error(e);
-				}
+				if (e.name === 'DiscordAPIError' && e.message === 'Unknown Message') await msg.destroy();
+				throw e;
 			}
 		}));
 
-		return fnc.replyExt(message, `Guild prefix set to \`${args[0]}\``);
+		return fnc.replyExt(message, `guild prefix set to \`${args[0]}\``);
 	},
 };

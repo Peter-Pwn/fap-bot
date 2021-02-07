@@ -4,11 +4,13 @@ module.exports = {
 	attributes: {
 		guildID: {
 			type: Sequelize.STRING(64),
-			unique: true,
 			allowNull: false,
 		},
 		prefix: {
 			type: Sequelize.STRING(1),
+		},
+		locale: {
+			type: Sequelize.STRING(3),
 		},
 	},
 	options: {

@@ -9,7 +9,6 @@ module.exports = {
 		},
 		messageID: {
 			type: Sequelize.STRING(64),
-			unique: true,
 			allowNull: false,
 		},
 		title: {
@@ -27,7 +26,7 @@ module.exports = {
 			type: Sequelize.STRING(25),
 			allowNull: false,
 			get() {
-				return moment.parseZone(this.getDataValue('time'));
+				return moment.parseZone(this.getDataValue('time') || 0);
 			},
 			set(val) {
 				this.setDataValue('time', val instanceof moment ? val.format() : val);

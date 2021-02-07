@@ -1,5 +1,5 @@
-const CON = require('../../src/const.json');
-const fnc = require('../../fnc');
+const CON = require(`${require.main.path}/src/const.json`);
+const fnc = require(`${require.main.path}/fnc`);
 
 module.exports = {
 	aliases: ['hey', 'hi', 'h'],
@@ -9,9 +9,10 @@ module.exports = {
 	usage: '<arg1> [opt1]',
 	msgType: CON.MSGTYPE.TEXT | CON.MSGTYPE.DM,
 	permLvl: CON.PERMLVL.OWNER,
-	cooldown: 3,
+	cooldown: 1,
 	deleteMsg: true,
 	execute(message, args) {
-		return fnc.replyExt(message, 'Piss off!\n' + args, { del: false });
+		if (args.length > 0) message.client.logger.info('hello args output:\n' + args);
+		return fnc.replyExt(message, 'Piss off!\n' + args, { delMsg: false });
 	},
 };

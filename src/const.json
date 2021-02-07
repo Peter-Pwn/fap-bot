@@ -10,11 +10,27 @@
 		"TEXT": 1,
 		"DM": 2
 	},
+	"CHTYPE": {
+		"DIV2XP": 1,
+		"EVENT": 2,
+		"EVENTSUM": 3,
+		"POOL": 4
+	},
 	"TEXTCLR": {
 		"ERROR": "#d2041d",
 		"WARN": "#d8d455"
 	},
+	"DIV2XPRST": {
+		"DAY": 4,
+		"HOUR": 9,
+		"MINUTE": 0
+	},
+	"DIV2XPLIMIT": {
+		"MAXCALLS": 60,
+		"INTIME": 60e3
+	},
+	"DIV2XPMFAILS": 3,
 	"DATETIMEPAT": ["YYYY-MM-DD h:mm a Z", "YYYY-MM-DD H:mm Z", "DD-MM-YYYY h:mm a Z", "DD-MM-YYYY H:mm Z"],
-	"MAININTVL": 3600e3,
+	"MAININTVL": 1800e3,
 	"NOTIFYTIME": 15
 }

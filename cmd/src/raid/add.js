@@ -1,4 +1,4 @@
-const CON = require('../../src/const.json');
+const CON = require(`${require.main.path}/src/const.json`);
 
 module.exports = {
 	aliases: ['addraid'],
@@ -11,7 +11,6 @@ module.exports = {
 	cooldown: 3,
 	deleteMsg: true,
 	execute(message, args) {
-		args.unshift('new');
-		return message.client.commands.get('editraid').execute(message, args);
+		return message.client.commands.get('raidedit').execute(message, ['new'].concat(args));
 	},
 };

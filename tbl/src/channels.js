@@ -6,26 +6,34 @@ module.exports = {
 			type: Sequelize.STRING(64),
 			allowNull: false,
 		},
-		memberID: {
+		guildID: {
 			type: Sequelize.STRING(64),
 			allowNull: false,
 		},
-		limit: {
+		type: {
 			type: Sequelize.INTEGER,
-			defaultValue: 0,
 			allowNull: false,
 		},
-		permanent: {
-			type: Sequelize.BOOLEAN,
-			defaultValue: false,
-			allowNull: false,
+		param1: {
+			type: Sequelize.STRING(),
+		},
+		param2: {
+			type: Sequelize.STRING(),
 		},
 	},
 	options: {
 		indexes: [
 			{
 				fields: ['channelID'],
-				unique: true,
+				unique: false,
+			},
+			{
+				fields: ['guildID'],
+				unique: false,
+			},
+			{
+				fields: ['type'],
+				unique: false,
 			},
 		],
 	},

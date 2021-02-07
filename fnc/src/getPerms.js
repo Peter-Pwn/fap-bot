@@ -1,5 +1,5 @@
-const CON = require('../../src/const.json');
-const cfg = require('../../src/config.js');
+const CON = require(`${require.main.path}/src/const.json`);
+const cfg = require(`${require.main.path}/src/config.js`);
 
 module.exports = function(user) {
 	let perm = CON.PERMLVL.EVERYONE;

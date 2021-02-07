@@ -8,3 +8,5 @@ log/
 src/config.json
 package.dev.json
 test.js
+Bot.txt
+Procfile

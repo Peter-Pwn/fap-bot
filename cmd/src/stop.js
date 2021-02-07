@@ -1,4 +1,4 @@
-const CON = require('../../src/const.json');
+const CON = require(`${require.main.path}/src/const.json`);
 
 module.exports = {
 	description: 'Shuts the bot down.',
@@ -7,9 +7,9 @@ module.exports = {
 	permLvl: CON.PERMLVL.OWNER,
 	cooldown: 3,
 	deleteMsg: false,
-	execute(message) {
-		message.delete();
-		message.client.logger.info(`${message.author.username} is shutting down the bot.`);
+	async execute(message) {
+		await message.delete();
+		message.client.logger.info(`'${message.author.tag}' is shutting down the bot.`);
 		message.client.destroy();
 	},
 };

@@ -1,5 +1,5 @@
-const CON = require('../../src/const.json');
-const fnc = require('../../fnc');
+const CON = require(`${require.main.path}/src/const.json`);
+const fnc = require(`${require.main.path}/fnc`);
 
 module.exports = {
 	aliases: ['commands'],
@@ -12,14 +12,14 @@ module.exports = {
 	deleteMsg: true,
 	execute(message, args) {
 		const data = [];
-		const prefix = fnc.getPrefix(message.guild);
+		const prefix = fnc.guilds.getPrefix(message.guild);
 		if (args.length) {
 			args[0] = args[0].replace(/^\[?!?|\]$/g, '').toLowerCase();
 			const command = message.client.commands.get(args[0]) || message.client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(args[0]));
-			if (!command) return fnc.replyExt(message, `${args[0]} is not a command`, { color: CON.TEXTCLR.WARN });
+			if (!command) return fnc.replyWarn(message, `${args[0]} is not a command`);
 			if (!(fnc.getPerms(message.member || message.author) & command.permLvl)) return true;
 			data.push(`**${prefix}${args[0]}**\n`);
-			if (command.aliases) data.push(`\`Aliases:\` ${command.name}, ${command.aliases.join(', ')}`);
+			if (command.aliases) data.push(`\`Aliases:\` ${command.name}${command.aliases.length ? ', ' + command.aliases.join(', ') : ''}`);
 			data.push(`\`Description:\` ${command.description}`);
 			if (command.descriptionLong) data.push(`${command.descriptionLong}`);
 			data.push(`\`Usage:\` ${prefix}${args[0]} ${command.usage}`);

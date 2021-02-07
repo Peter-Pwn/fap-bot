@@ -1,6 +1,5 @@
-const CON = require('../../src/const.json');
-//const cfg = require('../../src/config.js');
-const fnc = require('../../fnc');
+const CON = require(`${require.main.path}/src/const.json`);
+const fnc = require(`${require.main.path}/fnc`);
 
 module.exports = {
 	aliases: ['editwelcome', 'welcomeadd', 'addwelcome'],
@@ -16,7 +15,7 @@ module.exports = {
 		let text = args[0];
 		if (typeof args[1] === 'undefined') args[1] = true;
 		args[1] = fnc.parseBool(args[1]);
-		if (args[1]) text += fnc.getCmdList(message.client, 'text', CON.PERMLVL.EVERYONE).reduce((txt, cmd) => txt + `\n● \`${fnc.getPrefix(message.guild)}${cmd[0]}\` ${cmd[1]}`, '');
+		if (args[1]) text += fnc.getCmdList(message.client, 'text', CON.PERMLVL.EVERYONE).reduce((txt, cmd) => txt + `\n● \`${fnc.guilds.getPrefix(message.guild)}${cmd[0]}\` ${cmd[1]}`, '');
 		if (typeof args[2] === 'undefined') args[2] = true;
 		args[2] = fnc.parseBool(args[2]);
 
@@ -56,7 +55,7 @@ module.exports = {
 			if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions' || e.message === 'Missing Access') {
 				return message.guild && message.guild.owner.send(`${message.guild.owner}, i don't have permission to send messages in \`${message.guild.name} #${message.channel.name}\`!`);
 			}
-			return message.client.logger.error(e);
+			throw e;
 		}
 		return true;
 	},
