@@ -16,6 +16,7 @@ module.exports = function(client) {
 						}
 						else if (channel.type === CON.CHTYPE.DIV2XP) {
 							div2xp.populate(client, channel)
+								.catch(() => null)
 								.finally(() => resolve());
 						}
 					}));

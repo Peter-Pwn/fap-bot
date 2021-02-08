@@ -18,7 +18,7 @@ module.exports = function(client, guildID, channelID, type, { param1 = null, par
 				channel.param1 = param1;
 				channel.param2 = param2;
 				channel.save()
-					.then(() => resolve())
+					.then(() => resolve(channel.get({ raw: true })))
 					.catch(e => reject(e));
 			})
 			.catch(e => reject(e));

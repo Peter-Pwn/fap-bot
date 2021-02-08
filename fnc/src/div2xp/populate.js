@@ -72,10 +72,10 @@ module.exports = function(client, channel) {
 											.then(() => resolve())
 											.catch(e => reject(e));
 									})
-									.catch(e => {
+									.catch(() => {
 										message.destroy()
 											.catch(() => null);
-										reject(e);
+										reject();
 									});
 							}
 						})
@@ -86,17 +86,17 @@ module.exports = function(client, channel) {
 									.catch(() => reject());
 							})
 							.catch(e => {
-								client.logger.warn(e);
+								if (e) client.logger.warn(e);
 								reject();
 							});
 					})
 					.catch(e => {
-						client.logger.warn(e);
+						if (e) client.logger.warn(e);
 						reject();
 					});
 			})
 			.catch(e => {
-				client.logger.warn(e);
+				if (e) client.logger.warn(e);
 				reject();
 			});
 	});

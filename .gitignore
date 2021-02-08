@@ -6,6 +6,7 @@ db/
 img/
 log/
 src/config.json
+src/config.tpa.json
 package.dev.json
 test.js
 Bot.txt

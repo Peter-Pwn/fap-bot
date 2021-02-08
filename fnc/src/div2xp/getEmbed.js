@@ -19,11 +19,12 @@ module.exports = function(channel, div2xp, { top = -1, showUplay = true } = {}) 
 					else if (i === 2) name = `🥉${name}`;
 					else name = `▪️${name}`;
 					if (showUplay) name = `${name} (${div2xp[i].uplayName})`;
-					players.push(name);
+					players[i] = name;
 					//node.js 12 only supports en
-					xp.push(new Intl.NumberFormat('en').format(div2xp[i].difference));
+					xp[i] = new Intl.NumberFormat('en').format(div2xp[i].difference);
 				})
-				.catch(() => null));
+				.catch(() => null),
+			);
 		}
 		Promise.allSettled(fetches)
 			.then(() => {

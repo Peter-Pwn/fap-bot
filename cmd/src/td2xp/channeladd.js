@@ -23,8 +23,10 @@ module.exports = {
 					let kWeeks = parseInt(args[2]);
 					if (!kWeeks || kWeeks < -1) kWeeks = -1;
 					fnc.channels.add(message.client, message.guild.id, channel, CON.CHTYPE.DIV2XP, { param1: pCount, param2: kWeeks })
-						.then(() => {
+						.then(chan => {
 							fnc.replyExt(message, `${message.guild.channels.cache.get(channel)} was successfully added.`);
+							fnc.div2xp.populate(message.client, chan)
+								.catch(() => null);
 							resolve();
 						})
 						.catch(e => {
