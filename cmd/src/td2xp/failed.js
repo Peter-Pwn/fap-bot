@@ -11,7 +11,7 @@ module.exports = {
 	deleteMsg: true,
 	execute(message) {
 		return new Promise((resolve, reject) => {
-			fnc.div2xp.getFailedMem(message.client, message.guild.id)
+			fnc.div2xp.getFailedMem(message.guild.id)
 				.then(members => {
 					let text = '';
 					const promises = [];

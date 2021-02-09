@@ -1,5 +1,8 @@
 const Discord = require('discord.js');
 
+const client = require(`${require.main.path}/src/client.js`);
+const db = require(`${require.main.path}/src/db.js`);
+
 const CON = require(`${require.main.path}/src/const.json`);
 const fnc = require(`${require.main.path}/fnc`);
 
@@ -18,15 +21,15 @@ module.exports = {
 	async execute(message, args) {
 		//get the welcome message
 		let welcomeMsg = null;
-		const msg = await message.client.db.welcomeMsgs.findOne({ attributes: ['id', 'messageID'], where: { channelID: message.channel.id } });
+		const msg = await db.welcomeMsgs.findOne({ attributes: ['id', 'messageID'], where: { channelID: message.channel.id } });
 		if (msg) {
 			welcomeMsg = await message.channel.messages.fetch(msg.messageID);
 		}
 		else {
 			return fnc.replyWarn(message, `You need to set a welcome message using ${fnc.guilds.getPrefix(message.guild)}editwelcome first.`);
 		}
-		if (!message.client.welcomeReacts.has(welcomeMsg.id))	message.client.welcomeReacts.set(welcomeMsg.id, new Discord.Collection());
-		const welcomeReacts = message.client.welcomeReacts.get(welcomeMsg.id);
+		if (!client.welcomeReacts.has(welcomeMsg.id))	client.welcomeReacts.set(welcomeMsg.id, new Discord.Collection());
+		const welcomeReacts = client.welcomeReacts.get(welcomeMsg.id);
 
 		const emojiRegex = RegExp('<:.+:(\\d+)>|(' + eRegex().source + ')');
 
@@ -51,7 +54,7 @@ module.exports = {
 						emojiID: args[i],
 						roleID: args[i + 1],
 					};
-					await message.client.db.welcomeReacts.create(react);
+					await db.welcomeReacts.create(react);
 					welcomeReacts.set(react.emojiID, react);
 				}
 				catch (e) {
@@ -75,7 +78,7 @@ module.exports = {
 				try {
 					if (!welcomeMsg.reactions.cache.has(args[i])) continue;
 					welcomeMsg.reactions.cache.get(args[i]).remove();
-					await message.client.db.welcomeReacts.destroy({ where: { messageID: welcomeMsg.id, emojiID: args[i] } });
+					await db.welcomeReacts.destroy({ where: { messageID: welcomeMsg.id, emojiID: args[i] } });
 					welcomeReacts.delete(args[i]);
 				}
 				catch (e) {

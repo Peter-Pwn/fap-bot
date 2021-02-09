@@ -1,3 +1,6 @@
+const logger = require(`${require.main.path}/src/logger.js`);
+const client = require(`${require.main.path}/src/client.js`);
+
 const CON = require(`${require.main.path}/src/const.json`);
 
 module.exports = {
@@ -9,7 +12,7 @@ module.exports = {
 	deleteMsg: false,
 	async execute(message) {
 		await message.delete();
-		message.client.logger.info(`'${message.author.tag}' is shutting down the bot.`);
-		message.client.destroy();
+		logger.info(`'${message.author.tag}' is shutting down the bot.`);
+		client.destroy();
 	},
 };

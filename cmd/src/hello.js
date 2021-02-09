@@ -1,3 +1,5 @@
+const logger = require(`${require.main.path}/src/logger.js`);
+
 const CON = require(`${require.main.path}/src/const.json`);
 const fnc = require(`${require.main.path}/fnc`);
 
@@ -12,7 +14,7 @@ module.exports = {
 	cooldown: 1,
 	deleteMsg: true,
 	execute(message, args) {
-		if (args.length > 0) message.client.logger.info('hello args output:\n' + args);
+		if (args.length > 0) logger.info('hello args output:\n' + args);
 		return fnc.replyExt(message, 'Piss off!\n' + args, { delMsg: false });
 	},
 };

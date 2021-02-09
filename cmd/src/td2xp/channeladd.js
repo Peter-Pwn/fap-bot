@@ -12,20 +12,20 @@ module.exports = {
 	cooldown: 3,
 	deleteMsg: true,
 	execute(message, args) {
-		//fnc.channels.add(client, guildID, channelID, type, { param1 = null, param2 = null } );
+		//fnc.channels.add(guildID, channelID, type, { param1 = null, param2 = null } );
 		//param1 = top X
 		//param2 = time to keep
 		return new Promise((resolve, reject) => {
-			fnc.snowflakes.getChannel(message.client, args[0], message.guild.id)
+			fnc.snowflakes.getChannel(args[0], message.guild.id)
 				.then(channel => {
 					let pCount = parseInt(args[1]);
 					if (!pCount || pCount < -1) pCount = -1;
 					let kWeeks = parseInt(args[2]);
 					if (!kWeeks || kWeeks < -1) kWeeks = -1;
-					fnc.channels.add(message.client, message.guild.id, channel, CON.CHTYPE.DIV2XP, { param1: pCount, param2: kWeeks })
+					fnc.channels.add(message.guild.id, channel, CON.CHTYPE.DIV2XP, { param1: pCount, param2: kWeeks })
 						.then(chan => {
 							fnc.replyExt(message, `${message.guild.channels.cache.get(channel)} was successfully added.`);
-							fnc.div2xp.populate(message.client, chan)
+							fnc.div2xp.populate(chan)
 								.catch(() => null);
 							resolve();
 						})

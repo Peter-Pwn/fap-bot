@@ -1,12 +1,14 @@
+const db = require(`${require.main.path}/src/db.js`);
+
 const CON = require(`${require.main.path}/src/const.json`);
 
 const Warn = require(`${require.main.path}/fnc/src/Warn.js`);
 
 //removes a channel to the list and sets the type (event, xp)
-module.exports = function(client, channelID, type) {
+module.exports = function(channelID, type) {
 	return new Promise((resolve, reject) => {
 		if (Object.values(CON.CHTYPE).indexOf(type) === -1) return reject(Warn('no valid type'));
-		client.db.channels.destroy({
+		db.channels.destroy({
 			where: {
 				channelID: channelID,
 				type: type,

@@ -13,7 +13,7 @@ module.exports = {
 	deleteMsg: true,
 	execute(message, args) {
 		return new Promise((resolve, reject) => {
-			fnc.div2xp.remMember(message.client, message.guild.id, args[0])
+			fnc.div2xp.remMember(message.guild.id, args[0])
 				.then(() => {
 					fnc.replyExt(message, `\`${args[0]}\` was successfully removed.`);
 					resolve();

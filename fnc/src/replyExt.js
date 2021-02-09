@@ -1,3 +1,6 @@
+const logger = require(`${require.main.path}/src/logger.js`);
+const client = require(`${require.main.path}/src/client.js`);
+
 const cfg = require(`${require.main.path}/src/config.js`);
 
 module.exports = function(message, text, { mention = true, delMsg = true, delay = 5, color } = {}) {
@@ -23,7 +26,7 @@ module.exports = function(message, text, { mention = true, delMsg = true, delay 
 				if (delMsg) {
 					reply.react('❌')
 						.then(() => {
-							reply.awaitReactions((reaction, user) => reaction.emoji.name === '❌' && user.id !== message.client.user.id && ((message.guild && message.guild.members.cache.get(user.id).hasPermission(cfg.modPerm)) || user.id === message.author.id), {
+							reply.awaitReactions((reaction, user) => reaction.emoji.name === '❌' && user.id !== client.user.id && ((message.guild && message.guild.members.cache.get(user.id).hasPermission(cfg.modPerm)) || user.id === message.author.id), {
 								max: 1,
 								time: delay * 60e3,
 							})
@@ -37,14 +40,14 @@ module.exports = function(message, text, { mention = true, delMsg = true, delay 
 						.catch(e => {
 							if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions' || e.message === 'Missing Access') return message.channel.send(`${message.guild.owner}, i don't have permission to add reactions here!`);
 							if (e.name === 'DiscordAPIError' || e.name === 'Error' && e.message === 'Unknown Message') return;
-							message.client.logger.warn(e);
+							logger.warn(e);
 						});
 				}
 				resolve(reply);
 			})
 			.catch(e => {
 				if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions' || e.message === 'Missing Access') return message.guild && message.guild.owner.send(`${message.guild.owner}, i don't have permission to send messages in \`${message.guild.name} #${message.channel.name}\`!`);
-				message.client.logger.warn(e);
+				logger.warn(e);
 			});
 	});
 };

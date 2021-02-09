@@ -1,7 +1,9 @@
+const client = require(`${require.main.path}/src/client.js`);
+
 const Warn = require(`${require.main.path}/fnc/src/Warn.js`);
 
 //checks if the given parameter is a username or snowflake and returns the discord users snowflake
-module.exports = function(client, user, guild = null) {
+module.exports = function(user, guild = null) {
 	return new Promise((resolve, reject) => {
 		//<@!578580428349505536>
 		new Promise((resolve, reject) => {

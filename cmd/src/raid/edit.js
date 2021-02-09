@@ -1,8 +1,13 @@
+const moment = require('moment');
+
+const logger = require(`${require.main.path}/src/logger.js`);
+const client = require(`${require.main.path}/src/client.js`);
+const db = require(`${require.main.path}/src/db.js`);
+
 const CON = require(`${require.main.path}/src/const.json`);
 const fnc = require(`${require.main.path}/fnc`);
 const rnx = require(`${require.main.path}/rnx`);
 
-const moment = require('moment');
 
 module.exports = {
 	aliases: ['editraid'],
@@ -27,7 +32,7 @@ text" 4 "2020.08.27 20:30 +2" 1
 
 			//if not new, load missing values from db
 			if (args[0] !== 'new') {
-				raid = await message.client.db.raids.findOne({ where: { messageID: args[0] }, include: ['members'], order: [['members', 'id']] });
+				raid = await db.raids.findOne({ where: { messageID: args[0] }, include: ['members'], order: [['members', 'id']] });
 				if (!raid) throw new Error('Unknown Message');
 
 				if (!args[1]) args[1] = raid.title;
@@ -38,7 +43,7 @@ text" 4 "2020.08.27 20:30 +2" 1
 				if (!args[6]) args[6] = raid.roleID;
 			}
 			else {
-				raid = message.client.db.raids.build({}, { include: ['members'] });
+				raid = db.raids.build({}, { include: ['members'] });
 			}
 
 			//check for valid values
@@ -75,17 +80,17 @@ text" 4 "2020.08.27 20:30 +2" 1
 				raid.messageID = raidMsg.id;
 			}
 			else {
-				raidMsg = await message.client.channels.fetch(raid.channelID || '0').then(async channel => await channel.messages.fetch(raid.messageID || '0'));
+				raidMsg = await client.channels.fetch(raid.channelID || '0').then(async channel => await channel.messages.fetch(raid.messageID || '0'));
 				await raidMsg.edit(raidMsg.content, { embed: fnc.getRaidEmbed(message.channel, raid.get({ plain: true })) });
 			}
 			await raid.save();
-			message.client.raids.set(raid.messageID, raid.get({ plain: true }));
-			message.client.reacts.set(raid.messageID, rnx.raid);
-			message.client.emit('mainInterval', true);
+			client.raids.set(raid.messageID, raid.get({ plain: true }));
+			client.reacts.set(raid.messageID, rnx.raid);
+			client.emit('mainInterval', true);
 		}
 		catch (e) {
 			if (e.name === 'DiscordAPIError' || e.name === 'Error' && e.message === 'Unknown Message') return fnc.replyWarn(message, 'raid message not found');
-			if (e.name === 'RangeError [EMBED_FIELD_VALUE]') return message.client.logger.error(`Error sending raid embed:\n${e.stack}`);
+			if (e.name === 'RangeError [EMBED_FIELD_VALUE]') return logger.error(`Error sending raid embed:\n${e.stack}`);
 			throw e;
 		}
 		return true;

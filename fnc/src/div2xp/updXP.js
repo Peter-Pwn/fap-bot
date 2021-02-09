@@ -1,17 +1,19 @@
 const Sequelize = require('sequelize');
 const moment = require('moment');
 
+const logger = require(`${require.main.path}/src/logger.js`);
+const db = require(`${require.main.path}/src/db.js`);
+
 const CON = require(`${require.main.path}/src/const.json`);
 
-//const Warn = require(`${require.main.path}/fnc/src/Warn.js`);
 const getUplayData = require(`${require.main.path}/fnc/src/div2xp/getUplayData.js`);
 const getResetDay = require(`${require.main.path}/fnc/src/div2xp/getResetDay.js`);
 
 //updates all div2xp of members of a guild
-module.exports = function(client) {
+module.exports = function() {
 	return new Promise((resolve, reject) => {
 		const lastUpdate = moment();
-		client.db.div2xp.findAll({
+		db.div2xp.findAll({
 			where: { failed: { [Sequelize.Op.lt]: CON.DIV2XPMFAILS } },
 		})
 			.then(members => {
@@ -36,7 +38,7 @@ module.exports = function(client) {
 									.catch(() => null);
 							}
 							else if (e.name === 'UplayDataError') {
-								client.logger.warn(`UplayDataError:\n${e.message}`);
+								logger.warn(`UplayDataError:\n${e.message}`);
 							}
 							else {
 								return reject(e);

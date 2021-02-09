@@ -1,6 +1,6 @@
 {
   "name": "fap-bot",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "fabulous and pointless discord bot",
   "main": "./index.js",
   "scripts": {
@@ -10,18 +10,26 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Peter-Pwn/fap-bot.git"
+  },
   "author": "Peter-Pwn",
   "license": "ISC",
-	"dependencies": {
-		"discord.js": "^12.5.1",
+  "dependencies": {
     "axios": "^0.21.1",
+    "discord.js": "^12.5.1",
+    "emailjs": "^3.4.0",
+    "emoji-regex": "^9.2.1",
     "moment": "^2.29.1",
-    "sequelize": "^5.21.12",
-    "winston": "^3.2.1",
-    "winston-daily-rotate-file": "^4.5.0",
-		"tar": "^4.4.13",
-		"emoji-regex": "^8.0.0"
+    "sequelize": "^5.22.3",
+    "tar": "^6.1.0",
+    "winston": "^3.3.3",
+    "winston-daily-rotate-file": "^4.5.0"
   },
+	"devDependencies": {
+		"sqlite3": "^4.2.0"
+	},
   "engines": {
     "node": "12.x"
   }

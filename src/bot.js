@@ -1,11 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const Discord = require('discord.js');
-const Sequelize = require('sequelize');
 const moment = require('moment');
-const winston = require('winston');
-require('winston-daily-rotate-file');
-//require('winston-mail');
 const tar = require('tar');
 const emailjs = require('emailjs');
 
@@ -14,46 +10,19 @@ const cfg = require(`${require.main.path}/src/config.js`);
 const fnc = require(`${require.main.path}/fnc`);
 const rnx = require(`${require.main.path}/rnx`);
 
+const logger = require(`${require.main.path}/src/logger.js`);
+const client = require(`${require.main.path}/src/client.js`);
+const sequelize = require(`${require.main.path}/src/sequelize.js`);
+const db = require(`${require.main.path}/src/db.js`);
+
+
+//initial settings
 moment.suppressDeprecationWarnings = !cfg.debug;
 moment.locale('en');
 
-//create discord client https://discord.js.org/#/docs/main/stable/class/ClientUser?scrollTo=setPresence
-const client = new Discord.Client({
-	presence: cfg.presence,
-	partials: ['MESSAGE', 'REACTION'],
-});
+logger.info(`${cfg.appName} is initialising`);
 
-//create logger
-//DailyRotateFile https://github.com/winstonjs/winston-daily-rotate-file#options
-//TODO: logger in ../index.js and global
-client.logger = winston.createLogger({
-	transports: [new winston.transports.Console(cfg.log.console)],
-	format: winston.format.printf(info => `${moment().format('YYYY-MM-DD HH:mm:ss')} [${info.level.toUpperCase()}] ${(info instanceof Error) ? info.stack : info.message}`),
-});
-let fileLogger = null;
-if (cfg.log.file) {
-	fileLogger = new winston.transports.DailyRotateFile(cfg.log.file);
-	client.logger.add(fileLogger);
-}
-//if (cfg.log.mail) client.logger.add(new winston.transports.Mail(cfg.log.mail));
-/*new winston.transports.Mail({
-	level: 'error',
-	to: '',
-	from: '',
-	host: '',
-	port: ,
-	username: '',
-	password: '',
-	subject: '{{level}} {{msg}})',
-	tls: { ciphers: 'SSLv3' },
-	html: false,
-}),*/
-//if (cfg.debug) client.logger.transports[0].level = 'debug';
-
-client.logger.info(`${cfg.appName} is initialising`);
-
-
-client.commands = require(`${require.main.path}/cmd`);
+const commands = require(`${require.main.path}/cmd`);
 
 client.guildCfg = new Discord.Collection();
 
@@ -65,14 +34,6 @@ const cooldowns = new Discord.Collection();
 client.timeouts = [];
 client.locks = new Discord.Collection();
 
-//create DB connection
-const sequelize = new Sequelize(cfg.db_URI, {
-	logging: false,
-	sync: {
-		alter: cfg.debug,
-	},
-});
-client.db = require(`${require.main.path}/tbl`)(sequelize);
 sequelize.sync()
 	.then(() => {
 		//connect to discord
@@ -87,8 +48,8 @@ sequelize.sync()
 		throw e;
 	});
 
-//event listeners
 
+//event listeners
 client.once('ready', async () => {
 	//check for required guild permissions
 	/* disabled for now
@@ -105,23 +66,23 @@ client.once('ready', async () => {
 			else {
 				let text = `Missing the following permissions on "${g.name}":\n`;
 				text += g.me.permissions.missing(CON.RQDPERMS).join('\n').replace(/_/g, ' ');
-				client.logger.warn(text);
+				logger.warn(text);
 			}
 		}
 	});
 	*/
 
 	//get guilds from db
-	await client.db.guilds.findAll({ raw: true }).then(guilds => guilds.forEach(guild => client.guildCfg.set(guild.guildID, guild)));
+	await db.guilds.findAll({ raw: true }).then(guilds => guilds.forEach(guild => client.guildCfg.set(guild.guildID, guild)));
 
 	//get locks from db
-	await client.db.locks.findAll({ raw: true }).then(locks => locks.forEach(lock => client.locks.set(lock.channelID, lock)));
+	await db.locks.findAll({ raw: true }).then(locks => locks.forEach(lock => client.locks.set(lock.channelID, lock)));
 
 	//get welcome messages and reactions from db
-	await client.db.welcomeMsgs.findAll({ include: ['reacts'] }).then(msgs => msgs.forEach(async msg => {
+	await db.welcomeMsgs.findAll({ include: ['reacts'] }).then(msgs => msgs.forEach(async msg => {
 		try {
 			const message = await client.channels.fetch(msg.channelID || '0').then(async channel => await channel.messages.fetch(msg.messageID || '0'));
-			if (msg.cmdList) msg.text += fnc.getCmdList(client, 'text', CON.PERMLVL.EVERYONE).reduce((txt, cmd) => txt + `\n● \`${fnc.guilds.getPrefix(message.guild)}${cmd[0]}\` ${cmd[1]}`, '');
+			if (msg.cmdList) msg.text += fnc.getCmdList('text', CON.PERMLVL.EVERYONE).reduce((txt, cmd) => txt + `\n● \`${fnc.guilds.getPrefix(message.guild)}${cmd[0]}\` ${cmd[1]}`, '');
 			await message.edit(msg.text);
 			if (msg.reacts.length) {
 				client.welcomeReacts.set(msg.messageID, new Discord.Collection());
@@ -144,7 +105,7 @@ client.once('ready', async () => {
 	}));
 
 	//load raids
-	await client.db.raids.findAll({ include: ['members'], order: [['members', 'id']] }).then(raids => raids.forEach(async raid => {
+	await db.raids.findAll({ include: ['members'], order: [['members', 'id']] }).then(raids => raids.forEach(async raid => {
 		try {
 			if (await client.channels.fetch(raid.channelID || '0').then(async channel => await channel.messages.fetch(raid.messageID || '0'))) {
 				client.raids.set(raid.messageID, raid.get({ plain: true }));
@@ -162,7 +123,7 @@ client.once('ready', async () => {
 	client.setInterval(() => client.emit('mainInterval'), CON.MAININTVL);
 
 	//INIT finished
-	client.logger.info(`${cfg.appName} is ready`);
+	logger.info(`${cfg.appName} is ready`);
 });
 
 client.on('message', message => {
@@ -172,7 +133,7 @@ client.on('message', message => {
 			message.fetch()
 				.then(() => resolve())
 				.catch(e => {
-					client.logger.warn(`Error fetching message:\n${e.stack}`);
+					logger.warn(`Error fetching message:\n${e.stack}`);
 					reject();
 				});
 		}
@@ -188,7 +149,7 @@ client.on('message', message => {
 			const args = Array.from(message.content.slice(prefix.length).matchAll(/"([^"\\]*(?:\\.[^"\\]*)*)"|([^ ]+)/g), g => g[1] || g[2]);
 			if (args.length === 0) return;
 			const commandName = args.shift().toLowerCase();
-			const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
+			const command = commands.get(commandName) || commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
 			if (!command) return;
 
 			//check permissions and handle special channel type stuff
@@ -251,11 +212,11 @@ client.on('message', message => {
 					}
 				})
 				.catch(err => {
-					if (err && err.name !== 'Warn') client.logger.warn(`Couldn't execute command ${command.name}:\n${err.stack}`);
+					if (err && err.name !== 'Warn') logger.warn(`Couldn't execute command ${command.name}:\n${err.stack}`);
 					if (command.deleteMsg === true && message.channel.type === 'text' && !message.deleted) {
 						message.react('❌')
 							.then(() => {
-								message.awaitReactions((reaction, user) => reaction.emoji.name === '❌' && user.id !== message.client.user.id && ((message.guild && message.guild.members.cache.get(user.id).hasPermission(cfg.modPerm)) || user.id === message.author.id), {
+								message.awaitReactions((reaction, user) => reaction.emoji.name === '❌' && user.id !== client.user.id && ((message.guild && message.guild.members.cache.get(user.id).hasPermission(cfg.modPerm)) || user.id === message.author.id), {
 									max: 1,
 									time: 300e3,
 								})
@@ -275,7 +236,7 @@ client.on('message', message => {
 							.catch(e => {
 								if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions' || e.message === 'Missing Access') return message.channel.send(`${message.guild.owner}, i don't have permission to add reactions here!`);
 								if (e.name === 'DiscordAPIError' || e.name === 'Error' && e.message === 'Unknown Message') return;
-								message.client.logger.warn(e);
+								logger.warn(e);
 							});
 					}
 				});
@@ -287,25 +248,25 @@ client.on('message', message => {
 
 client.on('messageReactionAdd', async (reaction, user) => {
 	if (user.bot) return;
-	if (reaction.partial && !(await reaction.fetch().catch(e => client.logger.warn(`Error fetching reaction:\n${e.stack}`) && null))) return;
+	if (reaction.partial && !(await reaction.fetch().catch(e => logger.warn(`Error fetching reaction:\n${e.stack}`) && null))) return;
 
 	try {
 		if (client.reacts.has(reaction.message.id)) client.reacts.get(reaction.message.id).add(reaction, user);
 	}
 	catch (e) {
-		client.logger.error(`Couldn't execute reaction:\n${e.stack}`);
+		logger.error(`Couldn't execute reaction:\n${e.stack}`);
 	}
 });
 
 client.on('messageReactionRemove', async (reaction, user) => {
 	if (user.bot) return;
-	if (reaction.partial && !(await reaction.fetch().catch(e => client.logger.warn(`Error fetching reaction:\n${e.stack}`) && null))) return;
+	if (reaction.partial && !(await reaction.fetch().catch(e => logger.warn(`Error fetching reaction:\n${e.stack}`) && null))) return;
 
 	try {
 		if (client.reacts.has(reaction.message.id)) client.reacts.get(reaction.message.id).remove(reaction, user);
 	}
 	catch (e) {
-		client.logger.error(`Couldn't execute reaction:\n${e.stack}`);
+		logger.error(`Couldn't execute reaction:\n${e.stack}`);
 	}
 });
 
@@ -317,7 +278,7 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 		//unlock if all users left the channel
 		if (oldState.channel.members.size === 0 && oldState.channel.editable && !lock.permanent) {
 			oldState.channel.setUserLimit(lock.limit);
-			client.db.locks.destroy({ where: { channelID: oldState.channelID } });
+			db.locks.destroy({ where: { channelID: oldState.channelID } });
 			client.locks.delete(oldState.channelID);
 		}
 	}
@@ -326,7 +287,7 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 client.on('mainInterval', (init = false) => {
 	const promises = [];
 	//clan XP
-	promises.push(fnc.div2xp.updXP(client)
+	promises.push(fnc.div2xp.updXP()
 		.catch(() => null));
 
 	//events
@@ -334,7 +295,7 @@ client.on('mainInterval', (init = false) => {
 
 	Promise.allSettled(promises)
 		.then(() => {
-			fnc.channels.populate(client)
+			fnc.channels.populate()
 				.catch(e => {
 				//TODO: propper Error handling, this would probably result in an uncaught Error
 					throw e;
@@ -349,7 +310,7 @@ client.on('mainInterval', (init = false) => {
 	client.raids.filter(r => r.time.isBefore(moment().add(CON.MAININTVL))).forEach(async r => {
 		//delete from db if raid message is gone
 		if (!(await client.channels.fetch(r.channelID || '0').then(async channel => await channel.messages.fetch(r.messageID || '0').catch(() => false)))) {
-			client.db.raids.destroy({ where: { messageID: r.messageID }, include: ['members'] });
+			db.raids.destroy({ where: { messageID: r.messageID }, include: ['members'] });
 			client.raids.delete(r.messageID);
 			client.reacts.delete(r.messageID);
 		}
@@ -366,8 +327,8 @@ client.on('mainInterval', (init = false) => {
 						client.setTimeout(m => m.delete(), moment.duration(CON.NOTIFYTIME, 'm'), await channel.send(text));
 					}
 					catch (e) {
-						if (e.name === 'DiscordAPIError' || e.name === 'Error' && e.message === 'Unknown Message') return client.logger.warn(`raid message not found: ${raidID}`);
-						if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions' || e.message === 'Missing Access') return client.logger.warn(`Missing Permissions: ${raidID}`);
+						if (e.name === 'DiscordAPIError' || e.name === 'Error' && e.message === 'Unknown Message') return logger.warn(`raid message not found: ${raidID}`);
+						if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions' || e.message === 'Missing Access') return logger.warn(`Missing Permissions: ${raidID}`);
 					}
 				}, r.time.diff(moment().add(CON.NOTIFYTIME, 'm')), r.messageID));
 			}
@@ -380,7 +341,7 @@ client.on('mainInterval', (init = false) => {
 					const channel = await client.channels.fetch(raid.channelID || '0');
 					const message = await channel.messages.fetch(raid.messageID || '0');
 					await message.delete();
-					client.db.raidMembers.destroy({ where: { messageID: raidID } });
+					db.raidMembers.destroy({ where: { messageID: raidID } });
 					client.raids.delete(raidID);
 					client.reacts.delete(raidID);
 					if (raid.repeat > 0) {
@@ -391,17 +352,17 @@ client.on('mainInterval', (init = false) => {
 						await raidMsg.react('🆔');
 						raid.channelID = raidMsg.channel.id;
 						raid.messageID = raidMsg.id;
-						client.db.raids.update(raid, { where: { messageID: raidID }, include: ['members'] });
+						db.raids.update(raid, { where: { messageID: raidID }, include: ['members'] });
 						client.raids.set(raidMsg.id, raid);
 						client.reacts.set(raidMsg.id, rnx.raid);
 					}
 					else {
-						client.db.raids.destroy({ where: { messageID: raidID } });
+						db.raids.destroy({ where: { messageID: raidID } });
 					}
 				}
 				catch (e) {
-					if (e.name === 'DiscordAPIError' || e.name === 'Error' && e.message === 'Unknown Message') return client.logger.warn(`raid message not found: ${raidID}`);
-					if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions' || e.message === 'Missing Access') return client.logger.warn(`Missing Permissions: ${raidID}`);
+					if (e.name === 'DiscordAPIError' || e.name === 'Error' && e.message === 'Unknown Message') return logger.warn(`raid message not found: ${raidID}`);
+					if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions' || e.message === 'Missing Access') return logger.warn(`Missing Permissions: ${raidID}`);
 				}
 			}, r.time.diff(moment().subtract(1, 'h')), r.messageID));
 		}
@@ -414,12 +375,13 @@ client.on('mainInterval', (init = false) => {
 	}
 });
 
-fileLogger.on('new', logFile => {
+logger.fileLogger.on('new', logFile => {
 	//send old logfiles per mail
-	if (cfg.log && cfg.log.file && cfg.log.maxTotalSize && cfg.log.mailTo && cfg.mail && cfg.mail.server) {
+	if (cfg.log && cfg.log.file && !cfg.log.file.silent && cfg.log.maxTotalSize && cfg.log.mailTo && cfg.mail && cfg.mail.server) {
 		const maxSize = cfg.log.maxTotalSize.toLowerCase().match(/^((?:0\.)?\d+)([kmg]?)$/);
-		let maxTotalSize = maxSize[1];
+		let maxTotalSize = 0;
 		if (maxSize) {
+			maxTotalSize = maxSize[1];
 			if (maxSize[2] === 'k') maxTotalSize *= 1024;
 			else if (maxSize[2] === 'm') maxTotalSize *= 2048;
 			else if (maxSize[2] === 'g') maxTotalSize *= 3072;
@@ -442,7 +404,7 @@ fileLogger.on('new', logFile => {
 			files,
 			)
 				.then(() => {
-					emailjs.server.connect(cfg.mail.server).send({
+					new emailjs.SMTPClient(cfg.mail.server).sendAsync({
 						subject: `${cfg.appName} logfiles from ${timeStamp}`,
 						text: `the logfiles exceeded ${cfg.log.maxTotalSize} and got deleted`,
 						from: cfg.mail.from,
@@ -452,51 +414,40 @@ fileLogger.on('new', logFile => {
 							type: 'application/zip',
 							name: path.basename(tarFile),
 						}],
-					},
-					(e) => {
-						if (e) return console.error('[ERROR] mailError:\n', e);
-						try {
+					})
+						.then(() => {
+							//TODO: delete files too if no mail is set
 							files.forEach(file => {
 								fs.unlinkSync(`${logDir}/${file}`);
 							});
 							fs.unlinkSync(tarFile);
-						}
-						catch (err) {
-							console.error('[ERROR] unlinkError:\n', err);
-						}
-					});
+						})
+						.catch(e => {
+							logger.warn(e);
+						});
 				})
-				.catch(e => console.error('[ERROR] tarError:\n', e));
+				.catch(e => logger.warn(e));
 		}
 	}
 });
 
 //handle errors
-client.on('debug', e => client.logger.debug(e));
-client.on('warn', e => client.logger.warn(e));
+client.on('debug', e => logger.debug(e));
+client.on('warn', e => logger.warn(e));
 client.on('error', e => {
-	if (client) {
-		client.logger.error('discordError:\n' + e.stack);
-		client.destroy();
-	}
-	else {
-		console.error('[ERROR] discordError:\n', e);
-	}
+	logger.error('discordError:\n' + e.stack);
+	if (client) client.destroy();
 });
 process.on('unhandledRejection', e => {
-	if (client) {
-		//check for error save to continue and just warn
-		if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions' || e.message === 'Missing Access') return client.logger.warn('Missing Permissions:\n' + e.stack);
-		if (e.name === 'SequelizeTimeoutError') return client.logger.warn('Database timeout');
-		if (e.name === 'SequelizeUniqueConstraintError') return client.logger.warn('Database unique constraint error:\n' + e.stack);
-	}
+	//check for error save to continue and just warn
+	if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions' || e.message === 'Missing Access') return logger.warn('Missing Permissions:\n' + e.stack);
+	if (e.name === 'SequelizeTimeoutError') return logger.warn('Database timeout');
+	if (e.name === 'SequelizeUniqueConstraintError') return logger.warn('Database unique constraint error:\n' + e.stack);
 	//else stop the bot
 	throw e;
 });
 process.on('uncaughtException', e => {
-	if (client) {
-		if (e.name === 'Warn') return client.logger.warn('uncaughtWarn: ' + e.file + '\n' + e.message);
-	}
+	if (e.name === 'Warn') return logger.warn('uncaughtWarn: ' + e.file + '\n' + e.message);
 	throw e;
 });
 
@@ -509,20 +460,20 @@ process.on('SIGINT', () => {
 //cXP test
 const xptest = async function() {
 	try {
-		//await fnc.div2xp.addMember(client, '715125691468873839', '578580428349505536', 'PeterPwn247');
-		//await fnc.div2xp.addMember(client, '715125691468873839', '118844909787545605', 'berserkAries');
-		//await fnc.div2xp.remMember(client, '715125691468873839', 'PeterPwn247');
-		//await fnc.div2xp.updXP(client);
+		//await fnc.div2xp.addMember('715125691468873839', '578580428349505536', 'PeterPwn247');
+		//await fnc.div2xp.addMember('715125691468873839', '118844909787545605', 'berserkAries');
+		//await fnc.div2xp.remMember('715125691468873839', 'PeterPwn247');
+		//await fnc.div2xp.updXP();
 		//console.log(await fnc.div2xp.getUplayData('PeterPwn24'));
-		//console.log(await fnc.div2xp.getDifference(client, '715125691468873839'));
+		//console.log(await fnc.div2xp.getDifference('715125691468873839'));
 	}
 	catch (e) {
 		if (e.name === 'Warn') {
-			console.log(`xp test warn: ${e.message}`);
+			logger.warn(`xp test warn: ${e.message}`);
 		}
 		else {
-			console.log('xp test error:');
-			console.log(e);
+			logger.warn('xp test error:');
+			logger.warn(e);
 		}
 	}
 };

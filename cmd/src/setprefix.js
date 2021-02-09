@@ -1,3 +1,6 @@
+const client = require(`${require.main.path}/src/client.js`);
+const db = require(`${require.main.path}/src/db.js`);
+
 const CON = require(`${require.main.path}/src/const.json`);
 const fnc = require(`${require.main.path}/fnc`);
 
@@ -17,15 +20,15 @@ module.exports = {
 			guildID: message.guild.id,
 			prefix: args[0],
 		};
-		message.client.db.guilds.upsert(guild, { where: { guildID: message.guild.id } });
-		message.client.guildCfg.set(message.guild.id, guild);
+		db.guilds.upsert(guild, { where: { guildID: message.guild.id } });
+		client.guildCfg.set(message.guild.id, guild);
 
 		//update welcome messages
-		await message.client.db.welcomeMsgs.findAll({ include: ['reacts'] }).then(msgs => msgs.forEach(async msg => {
+		await db.welcomeMsgs.findAll({ include: ['reacts'] }).then(msgs => msgs.forEach(async msg => {
 			try {
-				const welcomeMsg = await message.client.channels.fetch(msg.channelID || '0').then(async channel => await channel.messages.fetch(msg.messageID || '0'));
+				const welcomeMsg = await client.channels.fetch(msg.channelID || '0').then(async channel => await channel.messages.fetch(msg.messageID || '0'));
 				if (welcomeMsg.guild.id === message.guild.id && msg.cmdList) {
-					await welcomeMsg.edit(msg.text + fnc.getCmdList(message.client, 'text', CON.PERMLVL.EVERYONE).reduce((txt, cmd) => txt + `\n● \`${args[0]}${cmd[0]}\` ${cmd[1]}`, ''));
+					await welcomeMsg.edit(msg.text + fnc.getCmdList('text', CON.PERMLVL.EVERYONE).reduce((txt, cmd) => txt + `\n● \`${args[0]}${cmd[0]}\` ${cmd[1]}`, ''));
 				}
 			}
 			catch (e) {

@@ -20,9 +20,9 @@ module.exports = {
 			const promises = [];
 			for (let i = 0; i < args.length; i += 2) {
 				promises.push(new Promise((resolve, reject) => {
-					fnc.snowflakes.getUser(message.client, args[i + 1], message.guild.id)
+					fnc.snowflakes.getUser(args[i + 1], message.guild.id)
 						.then(user => {
-							fnc.div2xp.addMember(message.client, message.guild.id, user, args[i])
+							fnc.div2xp.addMember(message.guild.id, user, args[i])
 								.then(() => resolve(`\`${args[i]}\` was successfully registered.`))
 								.catch(e => reject(e.message));
 						})

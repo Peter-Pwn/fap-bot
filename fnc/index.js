@@ -17,4 +17,5 @@ fs.readdirSync(path, { withFileTypes: true }).filter(dirent => dirent.isDirector
 		functions[dirent.name.slice(0, -3)] = require(`${path}/${dirent.name}`);
 	}
 });
+
 module.exports = functions;

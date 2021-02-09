@@ -12,9 +12,9 @@ module.exports = {
 	deleteMsg: true,
 	execute(message, args) {
 		return new Promise((resolve, reject) => {
-			fnc.snowflakes.getChannel(message.client, args[0], message.guild.id)
+			fnc.snowflakes.getChannel(args[0], message.guild.id)
 				.then(channel => {
-					fnc.channels.rem(message.client, channel, CON.CHTYPE.DIV2XP)
+					fnc.channels.rem(channel, CON.CHTYPE.DIV2XP)
 						.then(() => {
 							fnc.replyExt(message, `${message.guild.channels.cache.get(channel)} was successfully removed.`);
 							resolve();

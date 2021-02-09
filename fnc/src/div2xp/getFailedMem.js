@@ -1,11 +1,13 @@
 const Sequelize = require('sequelize');
 
+const db = require(`${require.main.path}/src/db.js`);
+
 const CON = require(`${require.main.path}/src/const.json`);
 
 //get probably wrong uplay names
-module.exports = function(client, guildID) {
+module.exports = function(guildID) {
 	return new Promise((resolve, reject) => {
-		client.db.div2xp.findAll({
+		db.div2xp.findAll({
 			attributes: ['uplayName', 'memberID'],
 			where: {
 				guildID: guildID,

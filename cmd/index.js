@@ -1,10 +1,13 @@
 //load commands from disc
 const fs = require('fs');
 const Discord = require('discord.js');
+
 const CON = require(`${require.main.path}/src/const.json`);
+const fnc = require(`${require.main.path}/fnc`);
 
 const path = `${module.path}/src/`;
 const commands = new Discord.Collection();
+
 fs.readdirSync(path, { withFileTypes: true }).filter(dirent => dirent.isDirectory() || dirent.name.endsWith('.js')).forEach(dirent => {
 	const files = [];
 	if (dirent.isDirectory()) {
@@ -18,7 +21,7 @@ fs.readdirSync(path, { withFileTypes: true }).filter(dirent => dirent.isDirector
 	for (const file of files) {
 		try {
 			const command = require(`${path}/${file[1]}`);
-			if (command.skip) throw new Error('skipped');
+			if (command.skip) throw new fnc.Warn('skipped');
 			if (command.aliases && !Array.isArray(command.aliases)) throw new Error('aliases is not a array');
 			if (typeof command.description !== 'string') throw new Error('description is not a string');
 			if (typeof command.descriptionLong !== 'string') command.descriptionLong = null;
@@ -38,4 +41,5 @@ fs.readdirSync(path, { withFileTypes: true }).filter(dirent => dirent.isDirector
 		}
 	}
 });
+
 module.exports = commands;

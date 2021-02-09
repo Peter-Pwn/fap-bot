@@ -1,9 +1,11 @@
+const db = require(`${require.main.path}/src/db.js`);
+
 const Warn = require(`${require.main.path}/fnc/src/Warn.js`);
 
 //remove guild member from the XP list
-module.exports = function(client, guildID, uplayName) {
+module.exports = function(guildID, uplayName) {
 	return new Promise((resolve, reject) => {
-		client.db.div2xp.destroy({
+		db.div2xp.destroy({
 			where: {
 				uplayName: uplayName,
 				guildID: guildID,

@@ -1,15 +1,17 @@
 const Sequelize = require('sequelize');
 const moment = require('moment');
 
+const db = require(`${require.main.path}/src/db.js`);
+
 const CON = require(`${require.main.path}/src/const.json`);
 
 const Warn = require(`${require.main.path}/fnc/src/Warn.js`);
 const getUplayData = require(`${require.main.path}/fnc/src/div2xp/getUplayData.js`);
 
 //add guild member to the XP list, link him with uplay and get the xp
-module.exports = function(client, guildID, memberID, uplayName) {
+module.exports = function(guildID, memberID, uplayName) {
 	return new Promise((resolve, reject) => {
-		client.db.div2xp.count({
+		db.div2xp.count({
 			where: {
 				uplayName: uplayName,
 				guildID: guildID,
@@ -20,7 +22,7 @@ module.exports = function(client, guildID, memberID, uplayName) {
 				if (count > 0) return reject(Warn(`\`${uplayName}\` is already in the list.`));
 				getUplayData(uplayName)
 					.then(data => {
-						client.db.div2xp.findOrBuild({
+						db.div2xp.findOrBuild({
 							where: {
 								uplayID: data.platformInfo.platformUserId,
 								guildID: guildID,

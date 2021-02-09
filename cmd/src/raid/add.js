@@ -1,3 +1,5 @@
+const commands = require(`${require.main.path}/cmd`);
+
 const CON = require(`${require.main.path}/src/const.json`);
 
 module.exports = {
@@ -11,6 +13,6 @@ module.exports = {
 	cooldown: 3,
 	deleteMsg: true,
 	execute(message, args) {
-		return message.client.commands.get('raidedit').execute(message, ['new'].concat(args));
+		return commands.get('raidedit').execute(message, ['new'].concat(args));
 	},
 };

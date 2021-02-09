@@ -2,14 +2,32 @@
 	"appName": "fap",
 	"appLongName": "fabulous and pointless",
 	"debug": false,
-	"logDir": "./log",
-	"prefix": "!",
-	"presence": {
-		"activity": {
-			"type": "WATCHING",
-			"name": "DEV"
-		}
+	"log": {
+		"console": {
+			"silent": false
+		},
+		"file": {
+			"silent": false,
+			"level": "warn",
+			"dirname": "./log",
+			"filename": "fap-%DATE%",
+			"extension": ".log",
+			"datePattern": "YYYY-MM",
+			"maxSize": "1m"
+		},
+		"maxTotalSize": "10m",
+		"mailTo": "your@mail.com"
 	},
+	"mail": {
+		"server": {
+			"user": "your@mail.com",
+			"password": "yourmailapssword",
+			"host": "your.mail.server",
+			"ssl": true
+		},
+		"from": "your@mail.com"
+	},
+	"prefix": "!",
 	"owners": ["yourdiscorduserid"],
 	"adminPerm": "ADMINISTRATOR",
 	"modPerm": "MANAGE_MESSAGES",

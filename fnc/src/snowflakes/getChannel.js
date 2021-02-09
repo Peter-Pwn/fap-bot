@@ -1,7 +1,9 @@
+const client = require(`${require.main.path}/src/client.js`);
+
 const Warn = require(`${require.main.path}/fnc/src/Warn.js`);
 
 //checks if the given parameter is a channel name or snowflake and returns the discord channels snowflake
-module.exports = function(client, channel, guild) {
+module.exports = function(channel, guild) {
 	return new Promise((resolve, reject) => {
 		//<#718051019996528755>
 		new Promise((resolve, reject) => {

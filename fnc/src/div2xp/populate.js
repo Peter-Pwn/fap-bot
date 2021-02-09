@@ -1,11 +1,15 @@
 const Sequelize = require('sequelize');
 const moment = require('moment');
 
+const logger = require(`${require.main.path}/src/logger.js`);
+const client = require(`${require.main.path}/src/client.js`);
+const db = require(`${require.main.path}/src/db.js`);
+
 const getEmbed = require(`${require.main.path}/fnc/src/div2xp/getEmbed.js`);
 const getResetDay = require(`${require.main.path}/fnc/src/div2xp/getResetDay.js`);
 
 //populate div2xp
-module.exports = function(client, channel) {
+module.exports = function(channel) {
 	return new Promise((resolve, reject) => {
 		//channel.param1 = top x players
 		channel.param1 = parseInt(channel.param1);
@@ -14,7 +18,7 @@ module.exports = function(client, channel) {
 		//delete old message
 		if (channel.param2 > 0) {
 			Promise.all([
-				client.db.div2xpMsgs.findAll({
+				db.div2xpMsgs.findAll({
 					where: {
 						channelID: channel.channelID,
 						time: { [Sequelize.Op.lte]: moment().subtract(channel.param2, 'w').format() },
@@ -38,13 +42,13 @@ module.exports = function(client, channel) {
 		}
 		//post or update messages
 		Promise.all([
-			client.db.div2xp.findAll({
+			db.div2xp.findAll({
 				attributes: ['uplayName', 'memberID', 'lastUpdate', [Sequelize.literal('`cXP` - `cXPSnapshot`'), 'difference']],
 				where: { guildID: channel.guildID },
 				order: Sequelize.literal('`difference` DESC'),
 				raw: true,
 			}),
-			client.db.div2xpMsgs.findOrBuild({
+			db.div2xpMsgs.findOrBuild({
 				where: {
 					channelID: channel.channelID,
 					time: { [Sequelize.Op.gt]: getResetDay().format() },
@@ -68,6 +72,7 @@ module.exports = function(client, channel) {
 							else {
 								disChannel.messages.fetch(message.messageID)
 									.then(disMessage => {
+										if (disMessage.deleted) throw null;
 										disMessage.edit({ embed: embed })
 											.then(() => resolve())
 											.catch(e => reject(e));
@@ -86,17 +91,17 @@ module.exports = function(client, channel) {
 									.catch(() => reject());
 							})
 							.catch(e => {
-								if (e) client.logger.warn(e);
+								if (e) logger.warn(e);
 								reject();
 							});
 					})
 					.catch(e => {
-						if (e) client.logger.warn(e);
+						if (e) logger.warn(e);
 						reject();
 					});
 			})
 			.catch(e => {
-				if (e) client.logger.warn(e);
+				if (e) logger.warn(e);
 				reject();
 			});
 	});

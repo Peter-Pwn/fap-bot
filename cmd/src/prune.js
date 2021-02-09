@@ -1,3 +1,6 @@
+const logger = require(`${require.main.path}/src/logger.js`);
+const client = require(`${require.main.path}/src/client.js`);
+
 const CON = require(`${require.main.path}/src/const.json`);
 const fnc = require(`${require.main.path}/fnc`);
 
@@ -26,7 +29,7 @@ module.exports = {
 					message.channel.send(`${message.guild.owner}, i don't have permission to delete messages here!`);
 				}
 				else {
-					message.client.logger.warn(`Couldn't prune ${message.channel.name}:\n${e.stack}`);
+					logger.warn(`Couldn't prune ${message.channel.name}:\n${e.stack}`);
 					fnc.replyWarn(message, 'there was an error trying to prune messages in this channel');
 					message.delete();
 				}
@@ -35,7 +38,7 @@ module.exports = {
 		else if (message.channel.type === 'dm') {
 			const messages = await message.author.dmChannel.messages.fetch();
 			let i = args[0];
-			for (const [, msg] of messages.filter(filter => filter.author.id === message.client.user.id)) {
+			for (const [, msg] of messages.filter(filter => filter.author.id === client.user.id)) {
 				if (--i === 0) break;
 				await msg.delete();
 			}
