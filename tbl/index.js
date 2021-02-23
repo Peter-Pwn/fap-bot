@@ -1,7 +1,6 @@
 //load db table models from disc
 const fs = require('fs');
 
-
 const logger = require(`${require.main.path}/src/logger.js`);
 const sequelize = require(`${require.main.path}/src/sequelize.js`);
 
