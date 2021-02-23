@@ -2,6 +2,9 @@ const CON = require(`${require.main.path}/src/const.json`);
 
 const fnc = require(`${require.main.path}/fnc`);
 
+const logger = require(`${require.main.path}/src/logger.js`);
+const client = require(`${require.main.path}/src/client.js`);
+
 module.exports = {
 	aliases: [],
 	description: 'Modifys uplay names for the Division 2 clan xp list.',
@@ -79,11 +82,18 @@ module.exports = {
 			const members = await fnc.div2xp.listMembers(message.guild.id, mode === 'failed');
 			members.sort((a, b) => a.uplayName.toLowerCase() < b.uplayName.toLowerCase() && -1 || a.uplayName.toLowerCase() > b.uplayName.toLowerCase() && 1 || 0);
 			let text = '';
-			if (mode === 'failed') text = '**List of probably wrong uplay names**\n';
+			if (mode === 'failed') text = '**List of probably wrong clan members**\n';
 			else text = '**List of all Division 2 clan members**\n';
 			for (const member of members) {
-				const disMember = await message.guild.members.fetch(member.memberID);
-				text += `${member.uplayName} (${disMember})\n`;
+				try {
+					const disMember = await message.guild.members.fetch(member.memberID);
+					text += `${member.uplayName} (${disMember})\n`;
+				}
+				catch (e) {
+					const disMember = await client.users.fetch(member.memberID);
+					logger.warn(`\`${disMember.tag}\` could not be found on guild \`${message.guild.name}\``);
+					continue;
+				}
 			}
 			fnc.discord.replyExt(message, text, { mention: false }).catch(() => null);
 		}

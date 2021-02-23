@@ -13,7 +13,6 @@ module.exports = async function(channel) {
 	channel.param1 = parseInt(channel.param1);
 	//channel.param2 = weeks to keep
 	channel.param2 = parseInt(channel.param2);
-	//TODO: check if channel is still there and maybe delete it from the db?!
 	const disChannel = await client.channels.fetch(channel.channelID);
 	//delete old message
 	if (channel.param2 > -1) {
@@ -25,10 +24,9 @@ module.exports = async function(channel) {
 		});
 		for (const message of messages) {
 			try {
-				//could fail in this order
-				await message.destroy();
 				const disMessage = await disChannel.messages.fetch(message.messageID);
 				await disMessage.delete();
+				await message.destroy();
 			}
 			catch (e) {
 				continue;

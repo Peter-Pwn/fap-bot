@@ -64,7 +64,7 @@ module.exports = {
 			for (const channel of channels) {
 				const disChannel = await client.channels.fetch(channel.channelID);
 				text += `${disChannel}\n`;
-				text += `\`\`\`number of palyers: ${channel.param2 > 0 ? channel.param2 : 'all'}\n`;
+				text += `\`\`\`number of players: ${channel.param1 > 0 ? channel.param1 : 'all'}\n`;
 				text += `weeks kept: ${channel.param2 > -1 ? channel.param2 : 'for ever'}\`\`\`\n`;
 			}
 			fnc.discord.replyExt(message, text, { mention: false });

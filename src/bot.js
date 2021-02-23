@@ -394,15 +394,13 @@ client.on('error', e => {
 	if (client) client.destroy();
 });
 process.on('unhandledRejection', e => {
-	//check for error save to continue and just warn
 	if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions' || e.message === 'Missing Access') return logger.warn('Missing Permissions:\n' + e.stack);
-	//if (e.name === 'SequelizeTimeoutError') return logger.warn('Database timeout');
-	//if (e.name === 'SequelizeUniqueConstraintError') return logger.warn('Database unique constraint error:\n' + e.stack);
-	//else stop the bot
+	logger.error(e);
 	throw e;
 });
 process.on('uncaughtException', e => {
 	if (e.name === 'Warn') return logger.warn('uncaughtWarn: ' + e.file + '\n' + e.message);
+	logger.error(e);
 	throw e;
 });
 

@@ -25,6 +25,7 @@ pinguweb.on('mainInterval', async () => {
 		if (!response || response.status !== 200) return false;
 		for (const member of response.data) {
 			try {
+				//TODO: log if data is missing and remove from xp list, if we don't get it from the server
 				if (member.Ubisoft && member.Discord && !members.some(v => v.uplayName.toLowerCase() === member.Ubisoft.nickname.toLowerCase())) {
 					await fnc.div2xp.addMember(cfgTpa.guild, member.Discord.officialAccountId, member.Ubisoft.nickname);
 					if (cfgTpa.log) logger.info(`pinguweb: \`${member.Ubisoft.nickname}\` added to clan xp list.`);
