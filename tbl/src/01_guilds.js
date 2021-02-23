@@ -21,4 +21,16 @@ module.exports = {
 			},
 		],
 	},
+	associations: {
+		hasMany: [
+			{
+				table: 'guildperms',
+				options: {
+					as: 'perms',
+					sourceKey: 'guildID',
+					foreignKey: 'guildID',
+				},
+			},
+		],
+	},
 };

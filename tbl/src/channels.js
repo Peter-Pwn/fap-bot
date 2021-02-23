@@ -11,7 +11,7 @@ module.exports = {
 			allowNull: false,
 		},
 		type: {
-			type: Sequelize.INTEGER,
+			type: Sequelize.TINYINT,
 			allowNull: false,
 		},
 		param1: {

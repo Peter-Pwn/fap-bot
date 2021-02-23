@@ -11,8 +11,9 @@ module.exports = {
 	cooldown: 3,
 	deleteMsg: false,
 	async execute(message) {
-		await message.delete();
+		if (message.channel.type === 'text') await message.delete();
 		logger.info(`'${message.author.tag}' is shutting down the bot.`);
 		client.destroy();
+		return true;
 	},
 };

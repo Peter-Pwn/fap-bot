@@ -52,7 +52,7 @@ module.exports = {
 	associations: {
 		hasMany: [
 			{
-				table: 'raidMembers',
+				table: 'raidmembers',
 				options: {
 					as: 'members',
 					sourceKey: 'messageID',

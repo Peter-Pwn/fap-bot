@@ -1,14 +1,20 @@
 {
 	"RQDPERMS": 372764246,
 	"PERMLVL": {
-		"OWNER": 8,
-		"ADMIN": 4,
-		"MOD": 2,
+		"OWNER": 1073741824,
+		"ADMIN": 536870912,
+		"MOD": 268435456,
+		"DIV2XP": 4,
+		"EVENTS": 2,
 		"EVERYONE": 1
 	},
 	"MSGTYPE": {
 		"TEXT": 1,
 		"DM": 2
+	},
+	"ENTTYPE": {
+		"USER": 1,
+		"ROLE": 2
 	},
 	"CHTYPE": {
 		"DIV2XP": 1,

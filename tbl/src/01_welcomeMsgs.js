@@ -35,7 +35,7 @@ module.exports = {
 	associations: {
 		hasMany: [
 			{
-				table: 'welcomeReacts',
+				table: 'welcomereacts',
 				options: {
 					as: 'reacts',
 					sourceKey: 'messageID',

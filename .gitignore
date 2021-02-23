@@ -1,12 +1,12 @@
 node_modules/
 .eslintrc
 .cmd.lnk
+.start mariaDB.lnk
+.stop mariaDB.lnk
 db/
 img/
 log/*
 src/config.json
 src/config.tpa.json
-package.dev.json
 test*.js
 Bot.txt
-Procfile

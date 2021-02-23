@@ -1,23 +1,19 @@
-const db = require(`${require.main.path}/src/db.js`);
-
 const CON = require(`${require.main.path}/src/const.json`);
 
-const Warn = require(`${require.main.path}/fnc/src/Warn.js`);
+const fnc = require(`${require.main.path}/fnc`);
+
+const db = require(`${require.main.path}/src/db.js`);
 
 //removes a channel to the list and sets the type (event, xp)
-module.exports = function(channelID, type) {
-	return new Promise((resolve, reject) => {
-		if (Object.values(CON.CHTYPE).indexOf(type) === -1) return reject(Warn('no valid type'));
-		db.channels.destroy({
-			where: {
-				channelID: channelID,
-				type: type,
-			},
-		})
-			.then(count => {
-				if (count === 0) return reject(Warn('the channel does not exists in the list.'));
-				resolve();
-			})
-			.catch(e => reject(e));
+module.exports = async function(channelID, type) {
+	if (!channelID) throw new TypeError('no channelID');
+	if (Object.values(CON.CHTYPE).indexOf(type) === -1) throw new TypeError('no valid type');
+	const count = await	db.channels.destroy({
+		where: {
+			channelID: channelID,
+			type: type,
+		},
 	});
+	if (count === 0) return fnc.Warn('the channel does not exists in the list.');
+	return true;
 };

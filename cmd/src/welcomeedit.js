@@ -1,8 +1,9 @@
-const client = require(`${require.main.path}/src/client.js`);
 const db = require(`${require.main.path}/src/db.js`);
 
 const CON = require(`${require.main.path}/src/const.json`);
 const fnc = require(`${require.main.path}/fnc`);
+
+const reacts = require(`${require.main.path}/src/reacts.js`);
 
 module.exports = {
 	aliases: ['editwelcome', 'welcomeadd', 'addwelcome'],
@@ -18,48 +19,38 @@ module.exports = {
 		let text = args[0];
 		if (typeof args[1] === 'undefined') args[1] = true;
 		args[1] = fnc.parseBool(args[1]);
-		if (args[1]) text += fnc.getCmdList('text', CON.PERMLVL.EVERYONE).reduce((txt, cmd) => txt + `\n● \`${fnc.guilds.getPrefix(message.guild)}${cmd[0]}\` ${cmd[1]}`, '');
+		if (args[1]) {
+			fnc.getCmdList('text', CON.PERMLVL.EVERYONE).forEach(cmd => {
+				text += `\n● \`${fnc.guilds.getPrefix(message.guild)}${cmd[0]}\` ${cmd[1]}`;
+			});
+		}
 		if (typeof args[2] === 'undefined') args[2] = true;
 		args[2] = fnc.parseBool(args[2]);
 
-		try {
-			let welcomeMsg = null;
-			const welcomeMsgID = await db.welcomeMsgs.findOne({ attributes: ['id', 'messageID'], where: { channelID: message.channel.id } });
-			if (welcomeMsgID) {
-				welcomeMsg = await message.channel.messages.fetch(welcomeMsgID.messageID).catch(async () => {
-					client.welcomeReacts.delete(welcomeMsgID.messageID);
-					client.reacts.delete(welcomeMsgID.messageID);
-					await welcomeMsgID.destroy();
-					return null;
-				});
+		const [welcomeMsg, isNewRecord] = await db.welcomemsgs.findOrBuild({
+			where: {
+				channelID: message.channel.id,
+			},
+		});
+		let disMsg = null;
+		if (!isNewRecord) {
+			try {
+				disMsg = await message.channel.messages.fetch(welcomeMsg.messageID);
+				await disMsg.edit(text);
 			}
-			if (welcomeMsg) {
-				await welcomeMsg.edit(text);
-				await welcomeMsgID.update({
-					text: args[0],
-					cmdList: args[1],
-				}, {
-					where: { messageID: welcomeMsg.id },
-				});
-			}
-			else {
-				welcomeMsg = await message.channel.send(text);
-				if (args[2]) await welcomeMsg.pin();
-				await db.welcomeMsgs.create({
-					channelID: message.channel.id,
-					messageID: welcomeMsg.id,
-					text: args[0],
-					cmdList: args[1],
-				});
+			catch (e) {
+				reacts.delete(welcomeMsg.messageID);
 			}
 		}
-		catch (e) {
-			if (e.name === 'SequelizeUniqueConstraintError') return;
-			if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions' || e.message === 'Missing Access') {
-				return message.guild && message.guild.owner.send(`${message.guild.owner}, i don't have permission to send messages in \`${message.guild.name} #${message.channel.name}\`!`);
-			}
-			throw e;
+		if (!disMsg) {
+			disMsg = await message.channel.send(text);
+			if (args[2]) await disMsg.pin();
+			welcomeMsg.channelID = message.channel.id;
+			welcomeMsg.messageID = disMsg.id;
 		}
+		welcomeMsg.text = args[0];
+		welcomeMsg.cmdList = args[1];
+		welcomeMsg.save();
 		return true;
 	},
 };

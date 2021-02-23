@@ -8,6 +8,7 @@ const CON = require(`${require.main.path}/src/const.json`);
 const fnc = require(`${require.main.path}/fnc`);
 const rnx = require(`${require.main.path}/rnx`);
 
+const reacts = require(`${require.main.path}/src/reacts.js`);
 
 module.exports = {
 	aliases: ['editraid'],
@@ -47,18 +48,18 @@ text" 4 "2020.08.27 20:30 +2" 1
 			}
 
 			//check for valid values
-			if (!args[1]) return fnc.replyWarn(message, 'the title can\'t be empty');
-			if (args[1].lenght > 255) return fnc.replyWarn(message, 'the title must be 255 or fewer in length');
+			if (!args[1]) return fnc.discord.replyWarn(message, 'the title can\'t be empty') && false;
+			if (args[1].lenght > 255) return fnc.discord.replyWarn(message, 'the title must be 255 or fewer in length') && false;
 			args[3] = parseInt(args[3]);
-			if (isNaN(args[3]) || args[3] < 1) return fnc.replyWarn(message, 'player count must be a positive number');
+			if (isNaN(args[3]) || args[3] < 1) return fnc.discord.replyWarn(message, 'player count must be a positive number') && false;
 			if (!(args[4] instanceof moment)) args[4] = moment.parseZone(args[4].replace(/[-+]([1-9])(?:\b|:)/, '+0$1'), CON.DATETIMEPAT);
-			if (!args[4].isValid() || args[4].isBefore(moment())) return fnc.replyWarn(message, 'date & time is not valid date');
+			if (!args[4].isValid() || args[4].isBefore(moment())) return fnc.discord.replyWarn(message, 'date & time is not valid date') && false;
 			if (!args[5] && args[5] !== 0) args[5] = 0;
 			args[5] = parseInt(args[5]);
-			if (isNaN(args[5]) || args[5] < 0) return fnc.replyWarn(message, 'repeat interval must be a full number');
+			if (isNaN(args[5]) || args[5] < 0) return fnc.discord.replyWarn(message, 'repeat interval must be a full number') && false;
 			if (args[6] && !message.guild.roles.cache.has(args[6])) {
 				args[6] = args[6].match(/<@&(\d+)>/);
-				if (!args[6]) return fnc.replyWarn(message, 'you have an error in your role');
+				if (!args[6]) return fnc.discord.replyWarn(message, 'you have an error in your role') && false;
 				args[6] = args[6][1];
 			}
 
@@ -73,7 +74,7 @@ text" 4 "2020.08.27 20:30 +2" 1
 			//send raid message with embed and write to db
 			if (args[0] === 'new') {
 				raid.set('members', []);
-				raidMsg = await message.channel.send(null, { embed: fnc.getRaidEmbed(message.channel, raid.get({ plain: true })) });
+				raidMsg = await message.channel.send(null, { embed: fnc.events.getRaidEmbed(message.channel, raid.get({ plain: true })) });
 				await raidMsg.react('✅');
 				await raidMsg.react('🆔');
 				raid.channelID = raidMsg.channel.id;
@@ -81,15 +82,15 @@ text" 4 "2020.08.27 20:30 +2" 1
 			}
 			else {
 				raidMsg = await client.channels.fetch(raid.channelID || '0').then(async channel => await channel.messages.fetch(raid.messageID || '0'));
-				await raidMsg.edit(raidMsg.content, { embed: fnc.getRaidEmbed(message.channel, raid.get({ plain: true })) });
+				await raidMsg.edit(raidMsg.content, { embed: fnc.events.getRaidEmbed(message.channel, raid.get({ plain: true })) });
 			}
 			await raid.save();
 			client.raids.set(raid.messageID, raid.get({ plain: true }));
-			client.reacts.set(raid.messageID, rnx.raid);
+			reacts.set(raid.messageID, rnx.raid);
 			client.emit('mainInterval', true);
 		}
 		catch (e) {
-			if (e.name === 'DiscordAPIError' || e.name === 'Error' && e.message === 'Unknown Message') return fnc.replyWarn(message, 'raid message not found');
+			if (e.name === 'DiscordAPIError' || e.name === 'Error' && e.message === 'Unknown Message') return fnc.discord.replyWarn(message, 'raid message not found') && false;
 			if (e.name === 'RangeError [EMBED_FIELD_VALUE]') return logger.error(`Error sending raid embed:\n${e.stack}`);
 			throw e;
 		}

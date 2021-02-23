@@ -1,42 +1,32 @@
+const fnc = require(`${require.main.path}/fnc`);
+
 const client = require(`${require.main.path}/src/client.js`);
 
-const Warn = require(`${require.main.path}/fnc/src/Warn.js`);
-
 //checks if the given parameter is a channel name or snowflake and returns the discord channels snowflake
-module.exports = function(channel, guild) {
-	return new Promise((resolve, reject) => {
-		//<#718051019996528755>
-		new Promise((resolve, reject) => {
-			if (parseInt(channel) > 0) {
-				resolve(channel);
+module.exports = async function(channel, guild = null) {
+	if (!channel) throw new TypeError('no channel');
+	//<#718051019996528755>
+	try {
+		let snowflake = null;
+		if (parseInt(channel) > 0) {
+			snowflake = channel;
+		}
+		else {
+			const mention = channel.match(/^<(?:#(\d+))>$/);
+			if (mention) {
+				snowflake = mention[1];
 			}
-			else {
-				const mention = channel.match(/^<(?:#(\d+))>$/);
-				if (mention) {
-					resolve(mention[1]);
-				}
-				else {
-					client.guilds.fetch(guild)
-						.then(g => {
-							channel = channel.replace(/^#/, '');
-							const c = g.channels.cache.find(cf => cf.name === channel);
-							if (c) resolve(c.id);
-							else reject(Warn('channel name not found.'));
-						})
-						.catch(e => reject(e));
-				}
+			else if (guild) {
+				channel = channel.replace(/^#/, '');
+				const g = await client.guilds.fetch(guild);
+				const c = g.channels.cache.find(cf => cf.name === channel);
+				if (c) snowflake = c.id;
 			}
-		})
-			.then(snowflake => {
-				if (snowflake) {
-					client.channels.fetch(snowflake)
-						.then(() => resolve(snowflake))
-						.catch(() => reject(Warn('channel not found.')));
-				}
-				else {
-					reject(Warn('channel not found.'));
-				}
-			})
-			.catch(e => reject(e));
-	});
+		}
+		if (!snowflake || !await client.channels.fetch(snowflake)) throw null;
+		return snowflake;
+	}
+	catch (e) {
+		throw fnc.Warn('channel not found.');
+	}
 };

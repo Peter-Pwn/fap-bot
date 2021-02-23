@@ -1,12 +1,24 @@
-const client = require(`${require.main.path}/src/client.js`);
+const db = require(`${require.main.path}/src/db.js`);
 
 module.exports = {
-	add: function(reaction, user) {
-		const react = client.welcomeReacts.get(reaction.message.id).get(reaction.emoji.id || reaction.emoji.name);
+	add: async function(reaction, user) {
+		const react = await db.welcomereacts.findOne({
+			attributes: ['roleID'],
+			where: {
+				messageID: reaction.message.id,
+				emojiID: reaction.emoji.id || reaction.emoji.name,
+			},
+		});
 		if (react) reaction.message.guild.members.cache.get(user.id).roles.add(reaction.message.guild.roles.cache.get(react.roleID));
 	},
-	remove: function(reaction, user) {
-		const react = client.welcomeReacts.get(reaction.message.id).get(reaction.emoji.id || reaction.emoji.name);
+	remove: async function(reaction, user) {
+		const react = await db.welcomereacts.findOne({
+			attributes: ['roleID'],
+			where: {
+				messageID: reaction.message.id,
+				emojiID: reaction.emoji.id || reaction.emoji.name,
+			},
+		});
 		if (react) reaction.message.guild.members.cache.get(user.id).roles.remove(reaction.message.guild.roles.cache.get(react.roleID));
 	},
 };

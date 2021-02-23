@@ -1,3 +1,5 @@
+//not used anymore, will be the template for events
+
 module.exports = function(channel, raid) {
 	if (!raid.title || !raid.time) return null;
 	if (!raid.description) raid.description = '\u200b';

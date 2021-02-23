@@ -1,20 +1,23 @@
+const fnc = require(`${require.main.path}/fnc`);
+
 const db = require(`${require.main.path}/src/db.js`);
 
-const Warn = require(`${require.main.path}/fnc/src/Warn.js`);
-
 //remove guild member from the XP list
-module.exports = function(guildID, uplayName) {
-	return new Promise((resolve, reject) => {
-		db.div2xp.destroy({
-			where: {
-				uplayName: uplayName,
-				guildID: guildID,
-			},
-		})
-			.then(count => {
-				if (count === 0) return reject(Warn(`\`${uplayName}\` does not exists in the list.`));
-				resolve();
-			})
-			.catch(e => reject(e));
+module.exports = async function(guildID, uplayName) {
+	if (!guildID) throw new TypeError('no guildID');
+	if (!uplayName) throw new TypeError('no uplayName');
+	try {
+		guildID = await fnc.snowflakes.getGuild(guildID);
+	}
+	catch (e) {
+		throw fnc.Warn('guild not found.');
+	}
+	const count = await db.div2xp.destroy({
+		where: {
+			uplayName: uplayName,
+			guildID: guildID,
+		},
 	});
+	if (count === 0) throw fnc.Warn(`\`${uplayName}\` does not exists in the list.`);
+	return true;
 };

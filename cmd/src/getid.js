@@ -9,14 +9,15 @@ module.exports = {
 	permLvl: CON.PERMLVL.ADMIN,
 	cooldown: 3,
 	deleteMsg: true,
-	execute(message, args) {
+	async execute(message, args) {
 		let text = '';
 		const id = args[0].match(/<(?:@!?(\d+)|@&(\d+)|#(\d+)|:.+:(\d+))>/);
-		if (!id) return fnc.replyWarn(message, `${args[0]} is not a mention.`, { rtn: true });
+		if (!id) throw fnc.Warn(`${args[0]} is not a mention.`);
 		if (id[1]) text = `user: ${id[1]}`;
 		else if (id[2]) text = `role: ${id[2]}`;
 		else if (id[3]) text = `channel: ${id[3]}`;
 		else if (id[4]) text = `emoji: ${id[4]}`;
-		return fnc.replyExt(message, text);
+		fnc.discord.replyExt(message, text).catch(() => null);
+		return true;
 	},
 };

@@ -11,10 +11,11 @@ module.exports = {
 	usage: '<arg1> [opt1]',
 	msgType: CON.MSGTYPE.TEXT | CON.MSGTYPE.DM,
 	permLvl: CON.PERMLVL.OWNER,
-	cooldown: 1,
+	cooldown: 3,
 	deleteMsg: true,
-	execute(message, args) {
+	async execute(message, args) {
 		if (args.length > 0) logger.info('hello args output:\n' + args);
-		return fnc.replyExt(message, 'Piss off!\n' + args, { delMsg: false });
+		fnc.discord.replyExt(message, 'Piss off!\n' + args, { delMsg: false }).catch(() => null);
+		return true;
 	},
 };

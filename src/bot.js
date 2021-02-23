@@ -7,6 +7,10 @@ const emailjs = require('emailjs');
 
 const CON = require(`${require.main.path}/src/const.json`);
 const cfg = require(`${require.main.path}/src/config.js`);
+
+moment.suppressDeprecationWarnings = !cfg.debug;
+moment.locale('en');
+
 const fnc = require(`${require.main.path}/fnc`);
 const rnx = require(`${require.main.path}/rnx`);
 
@@ -15,95 +19,60 @@ const client = require(`${require.main.path}/src/client.js`);
 const sequelize = require(`${require.main.path}/src/sequelize.js`);
 const db = require(`${require.main.path}/src/db.js`);
 
-
-//initial settings
-moment.suppressDeprecationWarnings = !cfg.debug;
-moment.locale('en');
-
 logger.info(`${cfg.appName} is initialising`);
 
 const commands = require(`${require.main.path}/cmd`);
 
-client.guildCfg = new Discord.Collection();
-
-client.reacts = new Discord.Collection();
-client.welcomeReacts = new Discord.Collection();
-client.raids = new Discord.Collection();
+const locks = require(`${require.main.path}/src/locks.js`);
+const reacts = require(`${require.main.path}/src/reacts.js`);
 
 const cooldowns = new Discord.Collection();
-client.timeouts = [];
-client.locks = new Discord.Collection();
 
-sequelize.sync()
-	.then(() => {
-		//connect to discord
-		client.login(cfg.token)
-			.catch(e => {
-				//TODO: propper Error handling, this would probably result in an uncaught Error
-				throw e;
-			});
-	})
-	.catch(e => {
-		//TODO: propper Error handling, this would probably result in an uncaught Error
-		throw e;
-	});
+const timeouts = [];
+
+//INIT db and discord client
+(async () => {
+	try {
+		await sequelize.sync();
+		await client.login(cfg.token);
+	}
+	catch (e) {
+		logger.error(`Could not connect to the database or discord servers\n${e}`);
+	}
+})();
 
 
 //event listeners
+
+//load data from db and process data
 client.once('ready', async () => {
-	//check for required guild permissions
-	/* disabled for now
-	client.guilds.cache.forEach(async g => {
-		if (!g.me.permissions.has(CON.RQDPERMS)) {
-			if (!g.owner) await g.members.fetch(g.ownerID);
-			if (g.owner) {
-				let text = `Hey ${g.owner}, i don't have the required permissions on \`${g.name}\`.\n`;
-				text += 'I\'m missing the following permissions:\n`';
-				text += g.me.permissions.missing(CON.RQDPERMS).join('\n').replace(/_/g, ' ');
-				text += '`\nPlease make sure i also have these in the individual channels.';
-				g.owner.send(text);
-			}
-			else {
-				let text = `Missing the following permissions on "${g.name}":\n`;
-				text += g.me.permissions.missing(CON.RQDPERMS).join('\n').replace(/_/g, ' ');
-				logger.warn(text);
-			}
-		}
-	});
-	*/
+	await fnc.guilds.load();
 
-	//get guilds from db
-	await db.guilds.findAll({ raw: true }).then(guilds => guilds.forEach(guild => client.guildCfg.set(guild.guildID, guild)));
+	(await db.locks.findAll({ raw: true })).forEach(l => locks.set(l.channelID, l));
 
-	//get locks from db
-	await db.locks.findAll({ raw: true }).then(locks => locks.forEach(lock => client.locks.set(lock.channelID, lock)));
-
-	//get welcome messages and reactions from db
-	await db.welcomeMsgs.findAll({ include: ['reacts'] }).then(msgs => msgs.forEach(async msg => {
+	const msgs = await db.welcomemsgs.findAll({ include: ['reacts'] });
+	for (const msg of msgs) {
 		try {
-			const message = await client.channels.fetch(msg.channelID || '0').then(async channel => await channel.messages.fetch(msg.messageID || '0'));
-			if (msg.cmdList) msg.text += fnc.getCmdList('text', CON.PERMLVL.EVERYONE).reduce((txt, cmd) => txt + `\n● \`${fnc.guilds.getPrefix(message.guild)}${cmd[0]}\` ${cmd[1]}`, '');
-			await message.edit(msg.text);
-			if (msg.reacts.length) {
-				client.welcomeReacts.set(msg.messageID, new Discord.Collection());
-				client.reacts.set(msg.messageID, rnx.welcome);
-				const reactMsg = client.welcomeReacts.get(msg.messageID);
-				msg.reacts.forEach(async react => {
-					if (message.reactions.cache.has(react.emojiID)) {
-						reactMsg.set(react.emojiID, react.get({ plain: true }));
-					}
-					else {
-						await react.destroy();
-					}
+			const disMsg = await fnc.discord.fetchMsg(msg.channelID, msg.messageID);
+			if (msg.cmdList) {
+				fnc.getCmdList('text', CON.PERMLVL.EVERYONE).forEach(cmd => {
+					msg.text += `\n● \`${fnc.guilds.getPrefix(disMsg.guild)}${cmd[0]}\` ${cmd[1]}`;
 				});
+			}
+			await	disMsg.edit(msg.text);
+			if (msg.reacts.length === 0) continue;
+			reacts.set(msg.messageID, rnx.welcome);
+			for (const react of msg.reacts) {
+				if (disMsg.reactions.cache.has(react.emojiID) && disMsg.reactions.cache.get(react.emojiID).me) continue;
+				await disMsg.react(react.emojiID);
 			}
 		}
 		catch (e) {
-			//message not found
-			if (e.name === 'DiscordAPIError' && e.message === 'Unknown Message') await msg.destroy();
+			continue;
 		}
-	}));
+	}
 
+	/*
 	//load raids
 	await db.raids.findAll({ include: ['members'], order: [['members', 'id']] }).then(raids => raids.forEach(async raid => {
 		try {
@@ -117,141 +86,125 @@ client.once('ready', async () => {
 			if (e.name === 'DiscordAPIError' && e.message === 'Unknown Message') await raid.destroy();
 		}
 	}));
+	*/
 
 	//set a interval for time based events
-	client.emit('mainInterval', true);
 	client.setInterval(() => client.emit('mainInterval'), CON.MAININTVL);
+	client.emit('mainInterval', true);
 
 	//INIT finished
 	logger.info(`${cfg.appName} is ready`);
+
+	//await fnc.guilds.addPerm('715125691468873839', '681662794071932974', CON.ENTTYPE.USER, CON.PERMLVL.MOD);
+	//await fnc.guilds.addPerm('71512569146887383', '681662794071932974', CON.ENTTYPE.USER, CON.PERMLVL.MOD);
 });
 
-client.on('message', message => {
-	//handle commands send to the bot
-	new Promise((resolve, reject) => {
-		if (message.partial) {
-			message.fetch()
-				.then(() => resolve())
-				.catch(e => {
-					logger.warn(`Error fetching message:\n${e.stack}`);
-					reject();
-				});
+//handle commands send to the bot
+//TODO: hanle edits
+client.on('message', async message => {
+	if (message.partial) {
+		try {
+			await message.fetch();
 		}
-		else {
-			resolve();
+		catch (e) {
+			return logger.warn(`Error fetching message:\n${e.stack}`);
 		}
-	})
-		.then(() => {
-			if (message.author.bot) return;
-			const prefix = fnc.guilds.getPrefix(message.guild);
-			if (!message.content.startsWith(prefix)) return;
-			//split args by spaces, but not between quotes, escapes are possible
-			const args = Array.from(message.content.slice(prefix.length).matchAll(/"([^"\\]*(?:\\.[^"\\]*)*)"|([^ ]+)/g), g => g[1] || g[2]);
-			if (args.length === 0) return;
-			const commandName = args.shift().toLowerCase();
-			const command = commands.get(commandName) || commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
-			if (!command) return;
-
-			//check permissions and handle special channel type stuff
-			if (command.permLvl === CON.PERMLVL.OWNER && !cfg.owners.includes(message.author.id)) {
-				message.delete()
-					.catch(() => null);
-				return;
-			}
-			if (message.channel.type === 'text' && command.msgType & CON.MSGTYPE.TEXT) {
-				if (!(fnc.getPerms(message.member) & command.permLvl)) {
-					fnc.replyWarn(message, 'you don\'t have the permission to use this command.')
-						.then(() => {
-							message.delete()
-								.catch(() => null);
-						});
-					return;
-				}
-			}
-			else if (message.channel.type === 'dm' && command.msgType & CON.MSGTYPE.DM) {
-				//DM stuff
-			}
-			else {
-				return;
-			}
-
-			//check for args count
-			if (command.args && args.length < command.args) {
-				let reply = 'you didn\'t provide enoght arguments.';
-				if (command.usage) reply += `\n\`Usage:\` ${prefix}${commandName} ${command.usage}\nRequired Arguments are marked with < >, optional with [ ].\nUse quotes to commit arguments containg spaces. E.g. \`${prefix}lock "channel name"\``;
-				return fnc.replyWarn(message, reply);
-			}
-
-			//check cooldown
-			//TODO: do a rework, with moment
-			//if (!cooldowns.has(command.name))	cooldowns.set(command.name, new Discord.Collection());
-			const timestamps = cooldowns.get(command.name) || cooldowns.set(command.name, new Discord.Collection());
-			const cooldown = command.cooldown * 1000;
-			const now = Date.now();
-			if (timestamps.has(message.author.id)) {
-				const expirationTime = timestamps.get(message.author.id);
-				if (now < expirationTime) {
-					return fnc.replyWarn(message, `please wait ${Math.ceil((expirationTime - now) / 1000)} more second(s) before reusing ${commandName}.`);
-				}
-			}
-			timestamps.set(message.author.id, now + cooldown);
-			client.setTimeout(() => timestamps.delete(message.author.id), cooldown);
-
-			//execute the command and delete command message if command was successful
-			//not all commands are async
-			Promise.all([command.execute(message, args)])
-				.then(() => {
-					if (command.deleteMsg === true && message.channel.type === 'text' && !message.deleted) {
-						message.delete()
-							.catch(e => {
-								if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions' || e.message === 'Missing Access') {
-									message.channel.send(`${message.guild.owner}, i don't have permission to delete messages here!`)
-										.catch(() => null);
-								}
-							});
-					}
-				})
-				.catch(err => {
-					if (err && err.name !== 'Warn') logger.warn(`Couldn't execute command ${command.name}:\n${err.stack}`);
-					if (command.deleteMsg === true && message.channel.type === 'text' && !message.deleted) {
-						message.react('❌')
-							.then(() => {
-								message.awaitReactions((reaction, user) => reaction.emoji.name === '❌' && user.id !== client.user.id && ((message.guild && message.guild.members.cache.get(user.id).hasPermission(cfg.modPerm)) || user.id === message.author.id), {
-									max: 1,
-									time: 300e3,
-								})
-									.then(() => {
-										if (message && !message.deleted) {
-											message.delete()
-												.catch(e => {
-													if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions' || e.message === 'Missing Access') {
-														message.channel.send(`${message.guild.owner}, i don't have permission to delete messages here!`)
-															.catch(() => null);
-													}
-												});
-										}
-									})
-									.catch(() => null);
-							})
-							.catch(e => {
-								if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions' || e.message === 'Missing Access') return message.channel.send(`${message.guild.owner}, i don't have permission to add reactions here!`);
-								if (e.name === 'DiscordAPIError' || e.name === 'Error' && e.message === 'Unknown Message') return;
-								logger.warn(e);
-							});
-					}
-				});
-		})
-		.catch(e => {
-			if (e) throw e;
-		});
-});
-
-client.on('messageReactionAdd', async (reaction, user) => {
-	if (user.bot) return;
-	if (reaction.partial && !(await reaction.fetch().catch(e => logger.warn(`Error fetching reaction:\n${e.stack}`) && null))) return;
+	}
 
 	try {
-		if (client.reacts.has(reaction.message.id)) client.reacts.get(reaction.message.id).add(reaction, user);
+		if (message.author.bot) return;
+		const prefix = fnc.guilds.getPrefix(message.guild);
+		if (!message.content.startsWith(prefix)) return;
+		//split args by spaces, but not between quotes, escapes are possible
+		const args = Array.from(message.content.slice(prefix.length).matchAll(/"([^"\\]*(?:\\.[^"\\]*)*)"|([^ ]+)/g), g => g[1] || g[2]);
+		if (args.length === 0) return;
+		const commandName = args.shift().toLowerCase();
+		const command = commands.get(commandName) || commands.find(c => c.aliases && c.aliases.includes(commandName));
+		if (!command) return;
+
+		//check permissions
+		if (!(fnc.guilds.getPerms(message.member || message.author) & command.permLvl)) {
+			fnc.discord.replyWarn(message, 'you don\'t have the permission to use this command.').catch(() => null);
+			if (message.channel.type === 'text') message.delete();
+			return;
+		}
+
+		let mode = null;
+		if (command.modes) {
+			if (args.length === 0) mode = Object.entries(command.modes).flatMap(m => m[1].isDefault && m[0] || [])[0];
+			else mode = args.shift().toLowerCase();
+			if (!Object.keys(command.modes).includes(mode)) {
+				fnc.discord.replyWarn(message, `\`${mode}\` is not a valid mode.\nValid modes are: \`${Object.keys(command.modes).join('`, `')}\``).catch(() => null);
+				return fnc.discord.delayDeleteMsg(message).catch(() => null);
+			}
+		}
+
+		//check for args count
+		if (mode && command.modes[mode].args && args.length < command.modes[mode].args || command.args && args.length < command.args) {
+			let reply = 'you didn\'t provide enoght arguments.';
+			if (mode && command.modes[mode].usage || command.usage) {
+				reply += `\n\`Usage:\` ${prefix}${commandName} ${mode && command.modes[mode].usage || command.usage}`;
+				reply += '\nRequired Arguments are marked with < >, optional with [ ].';
+				reply += `\nUse quotes to commit arguments containg spaces. E.g. \`${prefix}lock "channel name"\``;
+			}
+			fnc.discord.replyWarn(message, reply).catch(() => null);
+			return fnc.discord.delayDeleteMsg(message).catch(() => null);
+		}
+
+		//check cooldown
+		if (!cooldowns.has(command.name)) cooldowns.set(command.name, new Discord.Collection());
+		const users = cooldowns.get(command.name);
+		const now = moment();
+		if (users.has(message.author.id)) {
+			const expiration = users.get(message.author.id);
+			if (now.isBefore(expiration)) {
+				fnc.discord.replyWarn(message, `please wait ${expiration.diff(now, 's')} seconds before reusing ${commandName}.`).catch(() => null);
+				return fnc.discord.delayDeleteMsg(message).catch(() => null);
+			}
+		}
+		users.set(message.author.id, now.add(command.cooldown * 1000));
+		client.setTimeout(() => users.delete(message.author.id), command.cooldown * 1000);
+
+		//execute the command and delete command message
+		try {
+			await command.execute(message, args, mode);
+			if (client && command.deleteMsg === true && message.channel.type === 'text' && !message.deleted) message.delete();
+		}
+		catch (e) {
+			if (client && message) {
+				if (e.name === 'Warn' && client && message) {
+					if (e.message) fnc.discord.replyWarn(message, e.message).catch(() => null);
+					if (message.channel.type === 'text') fnc.discord.delayDeleteMsg(message).catch(() => null);
+					return;
+				}
+				fnc.discord.replyWarn(message, 'an internal error occurred.', { isError: true }).catch(() => null);
+				if (message.channel.type === 'text' && !message.deleted) message.delete();
+			}
+			throw e;
+		}
+	}
+	catch (e) {
+		//save to skip, maybe write something into the log or the server owner
+		if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions' || e.message === 'Missing Access') return;
+		if (e.name === 'DiscordAPIError' && e.message === 'Unknown Message') return;
+		logger.error(e);
+	}
+});
+
+//handle reactions
+client.on('messageReactionAdd', async (reaction, user) => {
+	if (reaction.partial) {
+		try {
+			await reaction.fetch();
+		}
+		catch (e) {
+			return logger.warn(`Error fetching reaction:\n${e.stack}`);
+		}
+	}
+	if (user.bot) return;
+
+	try {
+		if (reacts.has(reaction.message.id)) reacts.get(reaction.message.id).add(reaction, user);
 	}
 	catch (e) {
 		logger.error(`Couldn't execute reaction:\n${e.stack}`);
@@ -259,52 +212,62 @@ client.on('messageReactionAdd', async (reaction, user) => {
 });
 
 client.on('messageReactionRemove', async (reaction, user) => {
+	if (reaction.partial) {
+		try {
+			await reaction.fetch();
+		}
+		catch (e) {
+			return logger.warn(`Error fetching reaction:\n${e.stack}`);
+		}
+	}
 	if (user.bot) return;
-	if (reaction.partial && !(await reaction.fetch().catch(e => logger.warn(`Error fetching reaction:\n${e.stack}`) && null))) return;
 
 	try {
-		if (client.reacts.has(reaction.message.id)) client.reacts.get(reaction.message.id).remove(reaction, user);
+		if (reacts.has(reaction.message.id)) reacts.get(reaction.message.id).remove(reaction, user);
 	}
 	catch (e) {
 		logger.error(`Couldn't execute reaction:\n${e.stack}`);
 	}
 });
 
+//handle auto unlock of voice channels
 client.on('voiceStateUpdate', (oldState, newState) => {
-	//handle auto unlock of voice channels
-	if (oldState.channelID && oldState.channelID !== newState.channelID && client.locks.has(oldState.channelID)) {
-		const lock = client.locks.get(oldState.channelID);
+	if (oldState.channelID && oldState.channelID !== newState.channelID && locks.has(oldState.channelID)) {
+		const lock = locks.get(oldState.channelID);
 		//unlock if user left the channel -> if (oldState.member.id === lock.memberID && !lock.permanent) {
 		//unlock if all users left the channel
 		if (oldState.channel.members.size === 0 && oldState.channel.editable && !lock.permanent) {
 			oldState.channel.setUserLimit(lock.limit);
 			db.locks.destroy({ where: { channelID: oldState.channelID } });
-			client.locks.delete(oldState.channelID);
+			locks.delete(oldState.channelID);
 		}
 	}
 });
 
-client.on('mainInterval', (init = false) => {
-	const promises = [];
-	//clan XP
-	promises.push(fnc.div2xp.updXP()
-		.catch(() => null));
+//hanle interval actions
+client.on('mainInterval', async (init = false) => {
+	//clear pending timeouts
+	timeouts.forEach(t => client.clearTimeout(t));
+
+	//update clan XP
+	await fnc.div2xp.updateXP();
+	//if the xp reset is before next interval, do it in between
+	const nextRst = fnc.div2xp.getResetDay(moment().add(1, 'w'));
+	if (nextRst.isBefore(moment().add(CON.MAININTVL))) {
+		timeouts.push(client.setTimeout(async () => {
+			await fnc.div2xp.updateXP();
+			await fnc.channels.populate();
+		},
+		nextRst.diff(moment()) + 1));
+	}
 
 	//events
 	//(at some point)
 
-	Promise.allSettled(promises)
-		.then(() => {
-			fnc.channels.populate()
-				.catch(e => {
-				//TODO: propper Error handling, this would probably result in an uncaught Error
-					throw e;
-				});
-		});
+	//populate all channels
+	await fnc.channels.populate();
 
 	/*
-	//clear pending timeouts
-	client.timeouts.forEach(t => client.clearTimeout(t));
 
 	//look for upcoming raids in the next CON.MAININTVL and set a timeout to notify
 	client.raids.filter(r => r.time.isBefore(moment().add(CON.MAININTVL))).forEach(async r => {
@@ -341,7 +304,7 @@ client.on('mainInterval', (init = false) => {
 					const channel = await client.channels.fetch(raid.channelID || '0');
 					const message = await channel.messages.fetch(raid.messageID || '0');
 					await message.delete();
-					db.raidMembers.destroy({ where: { messageID: raidID } });
+					db.raidmembers.destroy({ where: { messageID: raidID } });
 					client.raids.delete(raidID);
 					client.reacts.delete(raidID);
 					if (raid.repeat > 0) {
@@ -375,9 +338,9 @@ client.on('mainInterval', (init = false) => {
 	}
 });
 
-logger.fileLogger.on('new', logFile => {
+logger.fileLogger.on('new', async logFile => {
 	//send old logfiles per mail
-	if (cfg.log && cfg.log.file && !cfg.log.file.silent && cfg.log.maxTotalSize && cfg.log.mailTo && cfg.mail && cfg.mail.server) {
+	if (cfg.log && cfg.log.file && !cfg.log.file.silent && cfg.log.maxTotalSize) {
 		const maxSize = cfg.log.maxTotalSize.toLowerCase().match(/^((?:0\.)?\d+)([kmg]?)$/);
 		let maxTotalSize = 0;
 		if (maxSize) {
@@ -394,39 +357,31 @@ logger.fileLogger.on('new', logFile => {
 		});
 		if (totalSize >= maxTotalSize) {
 			files.splice(files.indexOf(path.basename(logFile)), 1);
-			const timeStamp = moment().format('YYYY-MM-DD');
-			const tarFile = `${logDir}/${cfg.appName}-${timeStamp}-logs.tar.gz`;
-			tar.c({
-				gzip: true,
-				file: tarFile,
-				cwd: logDir,
-			},
-			files,
-			)
-				.then(() => {
-					new emailjs.SMTPClient(cfg.mail.server).sendAsync({
-						subject: `${cfg.appName} logfiles from ${timeStamp}`,
-						text: `the logfiles exceeded ${cfg.log.maxTotalSize} and got deleted`,
-						from: cfg.mail.from,
-						to: cfg.log.mailTo,
-						attachment: [{
-							path: tarFile,
-							type: 'application/zip',
-							name: path.basename(tarFile),
-						}],
-					})
-						.then(() => {
-							//TODO: delete files too if no mail is set
-							files.forEach(file => {
-								fs.unlinkSync(`${logDir}/${file}`);
-							});
-							fs.unlinkSync(tarFile);
-						})
-						.catch(e => {
-							logger.warn(e);
-						});
-				})
-				.catch(e => logger.warn(e));
+			if (cfg.log.mailTo && cfg.mail && cfg.mail.server) {
+				const timeStamp = moment().format('YYYY-MM-DD');
+				const tarFile = `${logDir}/${cfg.appName}-${timeStamp}-logs.tar.gz`;
+				await tar.c({
+					gzip: true,
+					file: tarFile,
+					cwd: logDir,
+				},
+				files);
+				await new emailjs.SMTPClient(cfg.mail.server).sendAsync({
+					subject: `${cfg.appName} logfiles from ${timeStamp}`,
+					text: `the logfiles exceeded ${cfg.log.maxTotalSize} and got deleted`,
+					from: cfg.mail.from,
+					to: cfg.log.mailTo,
+					attachment: [{
+						path: tarFile,
+						type: 'application/zip',
+						name: path.basename(tarFile),
+					}],
+				});
+				fs.unlinkSync(tarFile);
+			}
+			files.forEach(file => {
+				fs.unlinkSync(`${logDir}/${file}`);
+			});
 		}
 	}
 });
@@ -441,8 +396,8 @@ client.on('error', e => {
 process.on('unhandledRejection', e => {
 	//check for error save to continue and just warn
 	if (e.name === 'DiscordAPIError' && e.message === 'Missing Permissions' || e.message === 'Missing Access') return logger.warn('Missing Permissions:\n' + e.stack);
-	if (e.name === 'SequelizeTimeoutError') return logger.warn('Database timeout');
-	if (e.name === 'SequelizeUniqueConstraintError') return logger.warn('Database unique constraint error:\n' + e.stack);
+	//if (e.name === 'SequelizeTimeoutError') return logger.warn('Database timeout');
+	//if (e.name === 'SequelizeUniqueConstraintError') return logger.warn('Database unique constraint error:\n' + e.stack);
 	//else stop the bot
 	throw e;
 });
@@ -455,26 +410,3 @@ process.on('uncaughtException', e => {
 process.on('SIGINT', () => {
 	if (client) client.destroy();
 });
-
-
-//cXP test
-const xptest = async function() {
-	try {
-		//await fnc.div2xp.addMember('715125691468873839', '578580428349505536', 'PeterPwn247');
-		//await fnc.div2xp.addMember('715125691468873839', '118844909787545605', 'berserkAries');
-		//await fnc.div2xp.remMember('715125691468873839', 'PeterPwn247');
-		//await fnc.div2xp.updXP();
-		//console.log(await fnc.div2xp.getUplayData('PeterPwn24'));
-		//console.log(await fnc.div2xp.getDifference('715125691468873839'));
-	}
-	catch (e) {
-		if (e.name === 'Warn') {
-			logger.warn(`xp test warn: ${e.message}`);
-		}
-		else {
-			logger.warn('xp test error:');
-			logger.warn(e);
-		}
-	}
-};
-xptest();

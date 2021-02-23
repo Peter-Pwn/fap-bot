@@ -1,11 +1,11 @@
-let cfg = {};
+const fs = require('fs');
+
 try {
-	const fs = require('fs');
-	if (fs.existsSync(`${module.path}/config.json`)) {
-		cfg = require('./config.json');
+	if (fs.existsSync(`${require.main.path}/src/config.json`)) {
+		module.exports = require(`${require.main.path}/src/config.json`);
 	}
-	else {
-		cfg = {
+	else if (process.env && process.env.appName) {
+		module.exports = {
 			appName: process.env.appName,
 			appLongName: process.env.appLongName,
 			debug: process.env.debug || false,
@@ -18,10 +18,12 @@ try {
 			db_URI: process.env.DATABASE_URL,
 		};
 	}
+	else {
+		throw new Error('No config found');
+	}
 }
 catch (e) {
-	console.error(`Couldn't load config:\n${e.stack}`);
+	//eslint-disable-next-line no-console
+	console.error(`[ERROR] Couldn't load config:\n${e.stack}`);
 	throw e;
 }
-
-module.exports = cfg;

@@ -3,7 +3,7 @@ const fs = require('fs');
 
 const logger = require(`${require.main.path}/src/logger.js`);
 
-const path = `${module.path}/src`;
+const path = `${require.main.path}/fnc/src`;
 try {
 	fs.readdirSync(path, { withFileTypes: true }).filter(dirent => dirent.isDirectory() || dirent.name.endsWith('.js')).forEach(dirent => {
 		if (dirent.isDirectory()) {
@@ -22,4 +22,5 @@ try {
 }
 catch (e) {
 	logger.error(`Couldn't load funktions:\n${e.stack}`);
+	throw e;
 }
