@@ -33,7 +33,7 @@ const _getUplayData = async function(uplayName) {
 			break;
 		case 503:
 			//error.message = 'the request has been stopped.';
-			error.message = e.message;
+			error.message = e.response && e.response.data || 'the request has been stopped.';
 			break;
 		default:
 			error.message = 'request failed.';

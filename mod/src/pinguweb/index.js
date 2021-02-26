@@ -19,17 +19,38 @@ client.once('ready', () => {
 
 pinguweb.on('mainInterval', async () => {
 	try {
-		//fetch members from the webserver and add new players to the xp list
+		//fetch members from the webserver, add new players to the xp list and remove those that were not supplied
 		const members = await fnc.div2xp.listMembers(cfgTpa.guild);
 		const response = await tpaWeb.post('AllMember', { gameId: 1 });
 		if (!response || response.status !== 200) return false;
 		for (const member of response.data) {
 			try {
-				//TODO: log if data is missing and remove from xp list, if we don't get it from the server
-				if (member.Ubisoft && member.Discord && !members.some(v => v.uplayName.toLowerCase() === member.Ubisoft.nickname.toLowerCase())) {
+				if (!member.Ubisoft) {
+					if (cfgTpa.log) logger.warn(`pinguweb: \`${member.Discord.nickname}\` is missing a uplay account.`);
+					continue;
+				}
+				if (!member.Discord) {
+					if (cfgTpa.log) logger.warn(`pinguweb: \`${member.Ubisoft.nickname}\` is missing a discord account.`);
+					continue;
+				}
+				const idx = members.findIndex(v => v.uplayName.toLowerCase() === member.Ubisoft.nickname.toLowerCase());
+				if (idx === -1) {
 					await fnc.div2xp.addMember(cfgTpa.guild, member.Discord.officialAccountId, member.Ubisoft.nickname);
 					if (cfgTpa.log) logger.info(`pinguweb: \`${member.Ubisoft.nickname}\` added to clan xp list.`);
 				}
+				else {
+					members.splice(idx, 1);
+				}
+			}
+			catch (e) {
+				if (cfgTpa.log) logger.warn(`pinguweb: ${e}`);
+				continue;
+			}
+		}
+		for (const member of members) {
+			try {
+				await fnc.div2xp.remMember(cfgTpa.guild, member.uplayName);
+				if (cfgTpa.log) logger.info(`pinguweb: \`${member.uplayName}\` removed from clan xp list.`);
 			}
 			catch (e) {
 				if (cfgTpa.log) logger.warn(`pinguweb: ${e}`);

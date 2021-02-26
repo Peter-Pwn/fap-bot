@@ -40,6 +40,7 @@ module.exports = {
 			//param1 = top X
 			let pCount = parseInt(args[1]);
 			if (!pCount || pCount < -1) pCount = -1;
+			if (pCount > 50) pCount = 50;
 			//param2 = time to keep
 			let kWeeks = parseInt(args[2]);
 			if (!kWeeks && kWeeks !== 0 || kWeeks < -1) kWeeks = -1;
@@ -62,10 +63,16 @@ module.exports = {
 			const channels = await fnc.channels.list(message.guild.id, CON.CHTYPE.DIV2XP);
 			let text = '**List of Division 2 clan xp channels**\n';
 			for (const channel of channels) {
-				const disChannel = await client.channels.fetch(channel.channelID);
-				text += `${disChannel}\n`;
-				text += `\`\`\`number of players: ${channel.param1 > 0 ? channel.param1 : 'all'}\n`;
-				text += `weeks kept: ${channel.param2 > -1 ? channel.param2 : 'for ever'}\`\`\`\n`;
+				try {
+					const disChannel = await client.channels.fetch(channel.channelID);
+					text += `${disChannel}\n`;
+					text += `\`\`\`number of players: ${channel.param1 > 0 ? channel.param1 : 'all'}\n`;
+					text += `weeks kept: ${channel.param2 > -1 ? channel.param2 : 'for ever'}\`\`\`\n`;
+				}
+				catch (e) {
+					//TODO: remove or hint failed channels
+					continue;
+				}
 			}
 			fnc.discord.replyExt(message, text, { mention: false });
 		}

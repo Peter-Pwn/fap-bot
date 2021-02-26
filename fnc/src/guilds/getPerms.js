@@ -13,7 +13,7 @@ module.exports = function(user) {
 		}
 		else if (perms && perms.length > 0) {
 			for (const p of perms) {
-				if (p.entityType === CON.ENTTYPE.USER && p.entityID === user.id || p.entityType === CON.ENTTYPE.ROLE && user.roles.cache.has(p.entityID)) perm |= p.permission ^ CON.PERMLVL.OWNER;
+				if (p.entityType === CON.ENTTYPE.USER && p.entityID === user.id || p.entityType === CON.ENTTYPE.ROLE && user.roles.cache.has(p.entityID)) perm |= p.permission & ~CON.PERMLVL.OWNER;
 			}
 		}
 		//fallback to discord perms from config file

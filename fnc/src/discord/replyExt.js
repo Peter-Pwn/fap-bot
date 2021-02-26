@@ -19,6 +19,6 @@ module.exports = async function(message, text, { mention = true, delMsg = true, 
 			},
 		},
 	});
-	if (delMsg) fnc.discord.delayDeleteMsg(reply, delay).catch(() => null);
+	if (delMsg) fnc.discord.delayDeleteMsg(reply, message.author, delay).catch(() => null);
 	return reply;
 };

@@ -135,7 +135,7 @@ client.on('message', async message => {
 			else mode = args.shift().toLowerCase();
 			if (!Object.keys(command.modes).includes(mode)) {
 				fnc.discord.replyWarn(message, `\`${mode}\` is not a valid mode.\nValid modes are: \`${Object.keys(command.modes).join('`, `')}\``).catch(() => null);
-				return fnc.discord.delayDeleteMsg(message).catch(() => null);
+				return fnc.discord.delayDeleteMsg(message, message.author).catch(() => null);
 			}
 		}
 
@@ -148,7 +148,7 @@ client.on('message', async message => {
 				reply += `\nUse quotes to commit arguments containg spaces. E.g. \`${prefix}lock "channel name"\``;
 			}
 			fnc.discord.replyWarn(message, reply).catch(() => null);
-			return fnc.discord.delayDeleteMsg(message).catch(() => null);
+			return fnc.discord.delayDeleteMsg(message, message.author).catch(() => null);
 		}
 
 		//check cooldown
@@ -159,7 +159,7 @@ client.on('message', async message => {
 			const expiration = users.get(message.author.id);
 			if (now.isBefore(expiration)) {
 				fnc.discord.replyWarn(message, `please wait ${expiration.diff(now, 's')} seconds before reusing ${commandName}.`).catch(() => null);
-				return fnc.discord.delayDeleteMsg(message).catch(() => null);
+				return fnc.discord.delayDeleteMsg(message, message.author).catch(() => null);
 			}
 		}
 		users.set(message.author.id, now.add(command.cooldown * 1000));
@@ -174,7 +174,7 @@ client.on('message', async message => {
 			if (client && message) {
 				if (e.name === 'Warn' && client && message) {
 					if (e.message) fnc.discord.replyWarn(message, e.message).catch(() => null);
-					if (message.channel.type === 'text') fnc.discord.delayDeleteMsg(message).catch(() => null);
+					if (message.channel.type === 'text') fnc.discord.delayDeleteMsg(message, message.author).catch(() => null);
 					return;
 				}
 				fnc.discord.replyWarn(message, 'an internal error occurred.', { isError: true }).catch(() => null);
