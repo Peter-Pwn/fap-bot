@@ -18,7 +18,7 @@ let lastCheck = moment(0);
 
 client.once('ready', () => {
 	client.setInterval(() => pinguweb.emit('mainInterval'), cfgTpa.mainInterval);
-	pinguweb.emit('mainInterval', true);
+	//pinguweb.emit('mainInterval', true);
 });
 
 pinguweb.on('mainInterval', async () => {

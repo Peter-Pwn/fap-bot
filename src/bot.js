@@ -346,8 +346,8 @@ logger.fileLogger.on('new', async logFile => {
 		if (maxSize) {
 			maxTotalSize = maxSize[1];
 			if (maxSize[2] === 'k') maxTotalSize *= 1024;
-			else if (maxSize[2] === 'm') maxTotalSize *= 2048;
-			else if (maxSize[2] === 'g') maxTotalSize *= 3072;
+			else if (maxSize[2] === 'm') maxTotalSize *= 1024 * 1024;
+			else if (maxSize[2] === 'g') maxTotalSize *= 1024 * 1024 * 1024;
 		}
 		const logDir = path.normalize(cfg.log.file.dirname);
 		let totalSize = 0;
@@ -357,7 +357,7 @@ logger.fileLogger.on('new', async logFile => {
 		});
 		if (totalSize >= maxTotalSize) {
 			files.splice(files.indexOf(path.basename(logFile)), 1);
-			if (cfg.log.mailTo && cfg.mail && cfg.mail.server) {
+			if (cfg.log.mailTo && cfg.mail && cfg.mail.server && files) {
 				const timeStamp = moment().format('YYYY-MM-DD');
 				const tarFile = `${logDir}/${cfg.appName}-${timeStamp}-logs.tar.gz`;
 				await tar.c({

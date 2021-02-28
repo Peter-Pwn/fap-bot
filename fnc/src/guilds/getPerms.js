@@ -8,7 +8,7 @@ module.exports = function(user) {
 	if (user.guild) {
 		const perms = guildCfg.has(user.guild.id) && guildCfg.get(user.guild.id).perms;
 		//guild owner has all perms
-		if (user.guild.owner.id === user.id) {
+		if (user.guild.owner && user.guild.owner.id === user.id) {
 			perm |= CON.PERMLVL.ADMIN;
 		}
 		else if (perms && perms.length > 0) {
