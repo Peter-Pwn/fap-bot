@@ -16,12 +16,14 @@ module.exports = {
 			description: 'Lists probably wrong members from the Division 2 clan list.',
 		},
 		add: {
+			aliases: ['td2xpregister'],
 			description: 'Register a uplay name to the Division 2 clan xp list.',
 			descriptionLong: 'You can provide multible pairs of users.',
 			args: 2,
 			usage: '<uplay name> <@discord user> ... [uplay name] [@discord user]',
 		},
 		remove: {
+			aliases: ['td2xpremove'],
 			description: 'Removes a uplay name from the Division 2 clan xp list.',
 			descriptionLong: 'You can provide multible users.',
 			args: 1,

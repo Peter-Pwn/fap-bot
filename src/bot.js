@@ -22,6 +22,7 @@ const db = require(`${require.main.path}/src/db.js`);
 logger.info(`${cfg.appName} is initialising`);
 
 const commands = require(`${require.main.path}/cmd`);
+const aliases = require(`${require.main.path}/src/aliases.js`);
 
 const locks = require(`${require.main.path}/src/locks.js`);
 const reacts = require(`${require.main.path}/src/reacts.js`);
@@ -94,9 +95,6 @@ client.once('ready', async () => {
 
 	//INIT finished
 	logger.info(`${cfg.appName} is ready`);
-
-	//await fnc.guilds.addPerm('715125691468873839', '681662794071932974', CON.ENTTYPE.USER, CON.PERMLVL.MOD);
-	//await fnc.guilds.addPerm('71512569146887383', '681662794071932974', CON.ENTTYPE.USER, CON.PERMLVL.MOD);
 });
 
 //handle commands send to the bot
@@ -110,7 +108,6 @@ client.on('message', async message => {
 			return logger.warn(`Error fetching message:\n${e.stack}`);
 		}
 	}
-
 	try {
 		if (message.author.bot) return;
 		const prefix = fnc.guilds.getPrefix(message.guild);
@@ -118,8 +115,10 @@ client.on('message', async message => {
 		//split args by spaces, but not between quotes, escapes are possible
 		const args = Array.from(message.content.slice(prefix.length).matchAll(/"([^"\\]*(?:\\.[^"\\]*)*)"|([^ ]+)/g), g => g[1] || g[2]);
 		if (args.length === 0) return;
-		const commandName = args.shift().toLowerCase();
-		const command = commands.get(commandName) || commands.find(c => c.aliases && c.aliases.includes(commandName));
+		let commandName = args.shift().toLowerCase();
+		let mode = null;
+		if (!commands.has(commandName) && aliases.has(commandName)) [commandName, mode] = aliases.get(commandName);
+		const command = commands.get(commandName);
 		if (!command) return;
 
 		//check permissions
@@ -129,10 +128,11 @@ client.on('message', async message => {
 			return;
 		}
 
-		let mode = null;
 		if (command.modes) {
-			if (args.length === 0) mode = Object.entries(command.modes).flatMap(m => m[1].isDefault && m[0] || [])[0];
-			else mode = args.shift().toLowerCase();
+			if (!mode) {
+				if (args.length === 0) mode = Object.entries(command.modes).flatMap(m => m[1].isDefault && m[0] || [])[0] || 'default';
+				else mode = args.shift().toLowerCase();
+			}
 			if (!Object.keys(command.modes).includes(mode)) {
 				fnc.discord.replyWarn(message, `\`${mode}\` is not a valid mode.\nValid modes are: \`${Object.keys(command.modes).join('`, `')}\``).catch(() => null);
 				return fnc.discord.delayDeleteMsg(message, message.author).catch(() => null);

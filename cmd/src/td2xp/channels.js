@@ -13,12 +13,14 @@ module.exports = {
 			description: 'Lists the Division 2 clan xp channels.',
 		},
 		add: {
+			aliases: ['td2xpchanneladd'],
 			description: 'Adds a channel for the Division 2 clan xp list.',
 			descriptionLong: 'Set [player count] or [weeks to keep] to -1 for unlimited.',
 			args: 1,
 			usage: '<#channel> [player count (default: -1)] [weeks to keep (default: -1)]',
 		},
 		remove: {
+			aliases: ['td2xpchannelremove'],
 			description: 'Removes a channel for the Division 2 clan xp list.',
 			args: 1,
 			usage: '<#channel>',

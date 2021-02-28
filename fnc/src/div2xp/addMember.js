@@ -1,5 +1,7 @@
 const moment = require('moment');
 
+const CON = require(`${require.main.path}/src/const.json`);
+
 const fnc = require(`${require.main.path}/fnc`);
 
 const db = require(`${require.main.path}/src/db.js`);
@@ -37,10 +39,12 @@ module.exports = async function(guildID, memberID, uplayName) {
 	member.memberID = memberID;
 	member.cXP = parseInt(data.segments[0].stats.xPClan.value);
 	member.lastUpdate = moment();
-	member.cXPSnapshot = member.cXP;
-	member.lastSnapshot = member.lastUpdate;
+	if (isNewRecord || member.lastSnapshot.isBefore(fnc.div2xp.getResetDay())) {
+		member.cXPSnapshot = member.cXP;
+		member.lastSnapshot = member.lastUpdate;
+	}
 	member.failed = 0;
 	await member.save();
-	if (!isNewRecord) throw fnc.Warn(`\`${uplayName}\` was already in the list under the name of \`${oldName}\` and was renamed.`);
+	if (!isNewRecord) throw fnc.Warn(`\`${uplayName}\` was already in the list under the name of \`${oldName}\` and was renamed.`, CON.ERRCDE.RENAMED);
 	return true;
 };

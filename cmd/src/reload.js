@@ -1,5 +1,7 @@
 const fs = require('fs');
 
+const loadCmd = require(`${require.main.path}/cmd/load.js`);
+
 const logger = require(`${require.main.path}/src/logger.js`);
 const client = require(`${require.main.path}/src/client.js`);
 
@@ -43,45 +45,25 @@ module.exports = {
 			}
 			else {
 				//command
+				args[0] = args[0].replace(/^c:/, '').toLowerCase();
 				try {
-					args[0] = args[0].replace(/^c:/, '').toLowerCase();
 					const command = commands.get(args[0]);
-					if (!command) throw new Error(`${args[0]} is not a command`);
+					if (!command) throw fnc.Warn(`${args[0]} is not a command`);
 					logger.info(`'${message.author.tag}' is reloading command '${command.name}'`);
 					delete require.cache[require.resolve(`${require.main.path}/cmd/src/${command.file}`)];
-					const newCommand = require(`${require.main.path}/cmd/src/${command.file}`);
-					if (newCommand.skip) throw new Error('skipped');
-					if (newCommand.aliases && !Array.isArray(newCommand.aliases)) throw new Error('aliases is not a array');
-					if (typeof newCommand.description !== 'string') throw new Error('description is not a string');
-					if (typeof newCommand.descriptionLong !== 'string') newCommand.descriptionLong = null;
-					for (const mode in command.modes) {
-						if (command.modes[mode] && typeof command.modes[mode].description !== 'string') throw new Error(`${mode} description is not a string`);
-						if (command.modes[mode] && typeof command.modes[mode].descriptionLong !== 'string') command.descriptionLong = null;
-						if (command.modes[mode] && typeof parseInt(command.modes[mode].args) !== 'number') command.modes[mode].args = 0;
-						if (command.modes[mode] && command.modes[mode].args > 0 && typeof command.modes[mode].usage !== 'string') throw new Error(`${mode} usage is not a string`);
-						command.modes[mode].usage = `${mode} ${command.modes[mode].usage || ''}`;
-					}
-					if (typeof parseInt(command.args) !== 'number') command.args = 0;
-					if (command.args > 0 && typeof command.usage !== 'string') throw new Error('usage is not a string');
-					if (typeof newCommand.msgType !== 'number') newCommand.msgType = CON.MSGTYPE.TEXT;
-					if (typeof newCommand.permLvl !== 'number') newCommand.permLvl = CON.MSGTYPE.EVERYONE;
-					if (typeof newCommand.cooldown !== 'number') newCommand.cooldown = 3;
-					if (typeof newCommand.deleteMsg !== 'boolean') newCommand.deleteMsg = true;
-					if (typeof newCommand.execute !== 'function') throw new Error('execute is not a function');
-					newCommand.name = command.name;
-					newCommand.file = command.file;
+					const newCommand = loadCmd([command.name, command.file]);
 					commands.set(command.name, newCommand);
 					fnc.discord.replyExt(message, `command \`${command.name}\` was successfully reloaded`).catch(() => null);
 					if (message.channel.type === 'text') message.delete();
 				}
 				catch (e) {
-					if (e.name === 'Error') throw fnc.Warn(e.message);
+					if (e.name === 'Error') throw fnc.Warn(`Couldn't reload command ${args[0]}:\n ${e.message}`);
 					throw e;
 				}
 			}
 		}
 		else {
-			//coplete bot
+			//complete bot
 			logger.info(`'${message.author.tag}' is reloading the complete bot.`);
 			delete require.cache[require.resolve(`${require.main.path}/src/const.json`)];
 			delete require.cache[require.resolve(`${require.main.path}/src/config.js`)];

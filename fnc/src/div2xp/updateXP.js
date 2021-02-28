@@ -25,6 +25,7 @@ module.exports = async function() {
 		catch (e) {
 			if (e.name === 'UplayDataError' && e.status === 400) {
 				member.failed++;
+				if (member.failed > 100) member.failed = 100;
 				member.save();
 			}
 			else if (e.name === 'UplayDataError') {

@@ -12,6 +12,7 @@ module.exports = async function(channel, div2xp, { top = -1, showUplay = true } 
 	for (let i = 0; i < plyCount; i++) {
 		let member = null;
 		try {
+			//TODO: better ignoring players with do/while loop
 			member = await channel.guild.members.fetch(div2xp[i].memberID);
 			//member = `<@${div2xp[i].memberID}>`;
 			let name = `**${p++}.** ${member}`;
@@ -26,7 +27,7 @@ module.exports = async function(channel, div2xp, { top = -1, showUplay = true } 
 	const embed = {
 		color: channel.guild.me.displayColor,
 		title: 'Weekly clan XP',
-		description: div2xp.length > 0 ? `last update ${div2xp.reduce((a, b) => moment(b.lastUpdate).isAfter(a) && moment(b.lastUpdate) || a).format('ddd, MMM D YYYY H:mm')}` : '\u200b',
+		description: div2xp.length > 0 ? `last update ${div2xp.reduce((a, b) => moment(b.lastUpdate).isAfter(a) && moment(b.lastUpdate) || moment(a)).format('ddd, MMM D YYYY H:mm')}` : '\u200b',
 		thumbnail: {
 			url: channel.guild.iconURL(),
 		},

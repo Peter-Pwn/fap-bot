@@ -1,11 +1,17 @@
 const axios = require('axios');
 
+const cfg = require(`${require.main.path}/src/config.js`);
+
 const fnc = require(`${require.main.path}/fnc`);
 
 //gets Division2 data of a uplayName from the web
 const _getUplayData = async function(uplayName) {
 	try {
-		const response = await axios.get(`https://api.tracker.gg/api/v2/division-2/standard/profile/uplay/${uplayName}`);
+		const response = await axios.get(`https://public-api.tracker.gg/v2/division-2/standard/profile/uplay/${uplayName}`, {
+			headers: {
+				'TRN-Api-Key': cfg.trnKey,
+			},
+		});
 		if (!response || response.status !== 200 || response.data.data.segments.length <= 0) {
 			const error = new Error();
 			error.response = {};
@@ -32,8 +38,8 @@ const _getUplayData = async function(uplayName) {
 			error.message = 'invalid parameters supplied.';
 			break;
 		case 503:
-			//error.message = 'the request has been stopped.';
-			error.message = e.response && e.response.data || 'the request has been stopped.';
+			error.message = 'the request has been stopped.';
+			//error.message = e.response && e.response.data || 'the request has been stopped.';
 			break;
 		default:
 			error.message = 'request failed.';

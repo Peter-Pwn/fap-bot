@@ -32,11 +32,14 @@
 		"MINUTE": 0
 	},
 	"DIV2XPLIMIT": {
-		"MAXCALLS": 60,
+		"MAXCALLS": 30,
 		"INTIME": 60e3
 	},
 	"DIV2XPMFAILS": 3,
 	"DATETIMEPAT": ["YYYY-MM-DD h:mm a Z", "YYYY-MM-DD H:mm Z", "DD-MM-YYYY h:mm a Z", "DD-MM-YYYY H:mm Z"],
 	"MAININTVL": 1800e3,
-	"NOTIFYTIME": 15
+	"NOTIFYTIME": 15,
+	"ERRCDE": {
+		"RENAMED": 1
+	}
 }

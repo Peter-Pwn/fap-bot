@@ -1,6 +1,6 @@
 {
   "name": "fap-bot",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Fabulous and Pointless Doscord Bot",
   "main": "./index.js",
   "scripts": {
