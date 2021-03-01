@@ -1,17 +1,10 @@
-const axios = require('axios');
-
-const cfg = require(`${require.main.path}/src/config.js`);
-
 const fnc = require(`${require.main.path}/fnc`);
 
 //gets Division2 data of a uplayName from the web
-const _getUplayData = async function(uplayName) {
+module.exports = async function(uplayName) {
+	if (!uplayName) throw new TypeError('no uplayName');
 	try {
-		const response = await axios.get(`https://public-api.tracker.gg/v2/division-2/standard/profile/uplay/${uplayName}`, {
-			headers: {
-				'TRN-Api-Key': cfg.trnKey,
-			},
-		});
+		const response = await fnc.trackergg.apiCall(`division-2/standard/profile/uplay/${uplayName}`);
 		if (!response || response.status !== 200 || response.data.data.segments.length <= 0) {
 			const error = new Error();
 			error.response = {};
@@ -38,7 +31,7 @@ const _getUplayData = async function(uplayName) {
 			error.message = 'invalid parameters supplied.';
 			break;
 		case 503:
-			error.message = 'the request has been stopped.';
+			error.message = `the request has been stopped. (\`${uplayName}\`)`;
 			//error.message = e.response && e.response.data || 'the request has been stopped.';
 			break;
 		default:
@@ -46,9 +39,4 @@ const _getUplayData = async function(uplayName) {
 		}
 		throw error;
 	}
-};
-
-module.exports = async function(uplayName) {
-	if (!uplayName) throw new TypeError('no uplayName');
-	return await fnc.trackergg.apiRL(_getUplayData, [uplayName]);
 };

@@ -37,4 +37,16 @@ module.exports = {
 			},
 		],
 	},
+	associations: {
+		hasMany: [
+			{
+				table: 'div2xpmsgs',
+				options: {
+					as: 'div2xp',
+					sourceKey: 'channelID',
+					foreignKey: 'channelID',
+				},
+			},
+		],
+	},
 };

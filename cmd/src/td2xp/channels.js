@@ -42,13 +42,13 @@ module.exports = {
 			//param1 = top X
 			let pCount = parseInt(args[1]);
 			if (!pCount || pCount < -1) pCount = -1;
-			if (pCount > 50) pCount = 50;
+			//if (pCount > 50) pCount = 50;
 			//param2 = time to keep
 			let kWeeks = parseInt(args[2]);
 			if (!kWeeks && kWeeks !== 0 || kWeeks < -1) kWeeks = -1;
 			const chan = await fnc.channels.add(message.guild.id, channel, CON.CHTYPE.DIV2XP, { param1: pCount, param2: kWeeks });
-			fnc.discord.replyExt(message, `${message.guild.channels.cache.get(channel)} was successfully added.`).catch(() => null);
 			fnc.div2xp.populate(chan);
+			fnc.discord.replyExt(message, `${message.guild.channels.cache.get(channel)} was successfully added.`).catch(() => null);
 		}
 		else if (mode === 'remove') {
 			let channel = '';
@@ -64,17 +64,23 @@ module.exports = {
 		else {
 			const channels = await fnc.channels.list(message.guild.id, CON.CHTYPE.DIV2XP);
 			let text = '**List of Division 2 clan xp channels**\n';
-			for (const channel of channels) {
-				try {
-					const disChannel = await client.channels.fetch(channel.channelID);
-					text += `${disChannel}\n`;
-					text += `\`\`\`number of players: ${channel.param1 > 0 ? channel.param1 : 'all'}\n`;
-					text += `weeks kept: ${channel.param2 > -1 ? channel.param2 : 'for ever'}\`\`\`\n`;
+			if (channels.length) {
+				for (const channel of channels) {
+					try {
+						const disChannel = await client.channels.fetch(channel.channelID);
+						text += `${disChannel}\n`;
+						text += `\`\`\`number of players: ${channel.param1 > 0 ? channel.param1 : 'all'}\n`;
+						text += `weeks kept: ${channel.param2 > -1 ? channel.param2 : 'for ever'}\`\`\`\n`;
+					}
+					catch (e) {
+						//TODO: remove or hint failed channels
+						//already in populate. do we need it here too?
+						continue;
+					}
 				}
-				catch (e) {
-					//TODO: remove or hint failed channels
-					continue;
-				}
+			}
+			else {
+				text += 'no entries found.';
 			}
 			fnc.discord.replyExt(message, text, { mention: false });
 		}

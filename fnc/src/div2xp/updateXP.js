@@ -16,7 +16,11 @@ module.exports = async function() {
 			member.cXP = parseInt(data.segments[0].stats.xPClan.value);
 			member.lastUpdate = lastUpdate;
 			member.failed = 0;
-			if (member.lastSnapshot.isBefore(fnc.div2xp.getResetDay())) {
+			if (member.cXP - member.cXPSnapshot < 0) {
+				member.cXPSnapshot = 0;
+				member.lastSnapshot = member.lastUpdate;
+			}
+			else if (member.lastSnapshot.isBefore(fnc.div2xp.getResetDay())) {
 				member.cXPSnapshot = member.cXP;
 				member.lastSnapshot = member.lastUpdate;
 			}

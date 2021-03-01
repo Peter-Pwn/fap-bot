@@ -5,17 +5,17 @@ module.exports = async function(channel, div2xp, { top = -1, showUplay = true } 
 	if (!channel) throw new TypeError('no channel');
 	if (!div2xp) throw new TypeError('no div2xp');
 	top = parseInt(top);
-	if (top > 50) top = 50;
+	//if (top > 50) top = 50;
 	const plyCount = (top === -1 || div2xp.length < top) ? div2xp.length : top;
 	const players = [];
-	let p = 1;
-	for (let i = 0; i < plyCount; i++) {
-		let member = null;
+	let p = 0;
+	for (let i = 0; i < div2xp.length; i++) {
 		try {
-			//TODO: better ignoring players with do/while loop
-			member = await channel.guild.members.fetch(div2xp[i].memberID);
-			//member = `<@${div2xp[i].memberID}>`;
-			let name = `**${p++}.** ${member}`;
+			const member = await channel.guild.members.fetch(div2xp[i].memberID);
+			//const member = `<@${div2xp[i].memberID}>`;
+			p++;
+			if (p > plyCount) break;
+			let name = `**${p}.** ${member}`;
 			if (showUplay) name = `${name} (${Discord.Util.escapeMarkdown(div2xp[i].uplayName)})`;
 			//node.js 12 only supports en
 			players.push(`${name}\n${new Intl.NumberFormat('en').format(div2xp[i].difference)}`);
@@ -33,9 +33,9 @@ module.exports = async function(channel, div2xp, { top = -1, showUplay = true } 
 		},
 		fields: [],
 	};
-	for (let i = 0; i < players.length; i += 10) {
+	for (let i = 0; i < players.length && Math.floor(i / 10) < 25; i += 10) {
 		embed.fields.push({
-			name: (i === 0 && top > -1) ? `top ${top}` : '\u200b',
+			name: (i === 0 && top > 0) ? `top ${top}` : '\u200b',
 			value: players.slice(i, i + 10).join('\n') || '\u200b',
 		});
 	}

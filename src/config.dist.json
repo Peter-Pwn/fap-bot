@@ -32,5 +32,6 @@
 	"adminPerm": "ADMINISTRATOR",
 	"modPerm": "MANAGE_MESSAGES",
 	"token": "yourbottoken",
+	"trnKey": "yourtrackerggkey",
 	"db_URI": "sqlite:db/database.sqlite"
 }

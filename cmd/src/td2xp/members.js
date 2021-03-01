@@ -80,23 +80,30 @@ module.exports = {
 			else fnc.discord.replyExt(message, results.join('\n')).catch(() => null);
 		}
 		else {
-			const members = await fnc.div2xp.listMembers(message.guild.id, mode === 'failed');
-			members.sort((a, b) => a.uplayName.toLowerCase() < b.uplayName.toLowerCase() && -1 || a.uplayName.toLowerCase() > b.uplayName.toLowerCase() && 1 || 0);
 			let text = '';
 			if (mode === 'failed') text = '**List of probably wrong clan members**\n';
 			else text = '**List of all Division 2 clan members**\n';
-			for (const member of members) {
-				try {
-					let disMember = '';
-					if (member.failed !== 'discord') disMember = await message.guild.members.fetch(member.memberID);
-					else disMember = '';
-					text += `${Discord.Util.escapeMarkdown(member.uplayName)} ${disMember}`;
-					if (member.failed) text += ` (wrong ${member.failed})`;
-					text += '\n';
+			//disMsg = await fnc.discord.replyExt(message, `${text}\n*building list*`, { mention: false }).catch(() => null);
+			const members = await fnc.div2xp.listMembers(message.guild.id, mode === 'failed');
+			members.sort((a, b) => a.uplayName.toLowerCase() < b.uplayName.toLowerCase() && -1 || a.uplayName.toLowerCase() > b.uplayName.toLowerCase() && 1 || 0);
+			if (members.length) {
+				text += `count: ${members.length}\n`;
+				for (const member of members) {
+					try {
+						let disMember = '';
+						if (member.failed !== 'discord') disMember = await message.guild.members.fetch(member.memberID);
+						else disMember = '';
+						text += `${Discord.Util.escapeMarkdown(member.uplayName)} ${disMember}`;
+						if (member.failed) text += ` (wrong ${member.failed})`;
+						text += '\n';
+					}
+					catch (e) {
+						continue;
+					}
 				}
-				catch (e) {
-					continue;
-				}
+			}
+			else {
+				text += 'no entries found.';
 			}
 			fnc.discord.replyExt(message, text, { mention: false }).catch(() => null);
 		}

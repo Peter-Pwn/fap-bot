@@ -12,16 +12,16 @@ const fnc = require(`${require.main.path}/fnc`);
 const logger = require(`${require.main.path}/src/logger.js`);
 const client = require(`${require.main.path}/src/client.js`);
 
-const pinguweb = new Events();
+const pinguWeb = new Events();
 const tpaWeb = axios.create(cfgTpa.webServer);
 let lastCheck = moment(0);
 
 client.once('ready', () => {
-	client.setInterval(() => pinguweb.emit('mainInterval'), cfgTpa.mainInterval);
+	client.setInterval(() => pinguWeb.emit('mainInterval'), cfgTpa.mainInterval);
 	//pinguweb.emit('mainInterval', true);
 });
 
-pinguweb.on('mainInterval', async () => {
+pinguWeb.on('mainInterval', async () => {
 	try {
 		//fetch members from the webserver, add new players to the xp list and remove those that were not supplied
 		const members = await fnc.div2xp.listMembers(cfgTpa.guild);
