@@ -2,7 +2,6 @@ const client = require(`${require.main.path}/src/client.js`);
 const db = require(`${require.main.path}/src/db.js`);
 
 const CON = require(`${require.main.path}/src/const.json`);
-const cfg = require(`${require.main.path}/src/config.js`);
 const fnc = require(`${require.main.path}/fnc`);
 
 const locks = require(`${require.main.path}/src/locks.js`);

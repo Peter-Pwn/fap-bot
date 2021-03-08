@@ -7,7 +7,7 @@ const guildCfg = require(`${require.main.path}/src/guildCfg.js`);
 const validPerms = Object.keys(CON.PERMLVL).filter(v => CON.PERMLVL[v] > CON.PERMLVL.EVERYONE && CON.PERMLVL[v] < CON.PERMLVL.OWNER).join('`, `');
 module.exports = {
 	aliases: ['guildperms'],
-	description: 'Modifys the permissions of the guild.',
+	description: 'Handles permissions of the guild.',
 	modes: {
 		list: {
 			isDefault: true,

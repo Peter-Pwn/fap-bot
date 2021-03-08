@@ -108,6 +108,7 @@ client.on('message', async message => {
 			return logger.warn(`Error fetching message:\n${e.stack}`);
 		}
 	}
+
 	try {
 		if (message.author.bot) return;
 		const prefix = fnc.guilds.getPrefix(message.guild);
@@ -130,7 +131,7 @@ client.on('message', async message => {
 
 		if (command.modes) {
 			if (!mode) {
-				if (args.length === 0) mode = Object.entries(command.modes).flatMap(m => m[1].isDefault && m[0] || [])[0] || 'default';
+				if (args.length === 0) mode = Object.entries(command.modes).flatMap(v => v[1].isDefault && v[0] || [])[0] || 'default';
 				else mode = args.shift().toLowerCase();
 			}
 			if (!Object.keys(command.modes).includes(mode)) {
@@ -143,7 +144,7 @@ client.on('message', async message => {
 		if (mode && command.modes[mode].args && args.length < command.modes[mode].args || command.args && args.length < command.args) {
 			let reply = 'you didn\'t provide enoght arguments.';
 			if (mode && command.modes[mode].usage || command.usage) {
-				reply += `\n\`Usage:\` ${prefix}${commandName} ${mode && command.modes[mode].usage || command.usage}`;
+				reply += `\n**Usage** ${prefix}${commandName} ${mode && command.modes[mode].usage || command.usage}`;
 				reply += '\nRequired Arguments are marked with < >, optional with [ ].';
 				reply += `\nUse quotes to commit arguments containg spaces. E.g. \`${prefix}lock "channel name"\``;
 			}
@@ -339,7 +340,7 @@ client.on('mainInterval', async (init = false) => {
 });
 
 logger.fileLogger.on('new', async logFile => {
-	//send old logfiles per mail
+	//send old logfiles via mail
 	if (cfg.log && cfg.log.file && !cfg.log.file.silent && cfg.log.maxTotalSize) {
 		const maxSize = cfg.log.maxTotalSize.toLowerCase().match(/^((?:0\.)?\d+)([kmg]?)$/);
 		let maxTotalSize = 0;

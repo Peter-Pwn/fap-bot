@@ -8,7 +8,7 @@ module.exports = function(type, perms) {
 	for (const [, command] of commands) {
 		if (type === 'text' && !(command.msgType & CON.MSGTYPE.TEXT) || type === 'dm' && !(command.msgType & CON.MSGTYPE.DM)) continue;
 		if (!(perms & command.permLvl)) continue;
-		list.push([command.name, command.description]);
+		list.push([command.name, command.description, command.permLvl]);
 	}
 	return list;
 };

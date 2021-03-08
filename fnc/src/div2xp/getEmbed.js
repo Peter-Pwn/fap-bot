@@ -1,6 +1,8 @@
 const Discord = require('discord.js');
 const moment = require('moment');
 
+const fnc = require(`${require.main.path}/fnc`);
+
 module.exports = async function(channel, div2xp, { top = -1, showUplay = true } = {}) {
 	if (!channel) throw new TypeError('no channel');
 	if (!div2xp) throw new TypeError('no div2xp');
@@ -24,14 +26,19 @@ module.exports = async function(channel, div2xp, { top = -1, showUplay = true } 
 			continue;
 		}
 	}
+	const rstDay = fnc.div2xp.getResetDay();
+	const lastUpd = div2xp.reduce((a, b) => moment(b.lastUpdate).isAfter(a) && moment(b.lastUpdate) || moment(a), 0);
 	const embed = {
 		color: channel.guild.me.displayColor,
 		title: 'Weekly clan XP',
-		description: div2xp.length > 0 ? `last update ${div2xp.reduce((a, b) => moment(b.lastUpdate).isAfter(a) && moment(b.lastUpdate) || moment(a)).format('ddd, MMM D YYYY H:mm')}` : '\u200b',
+		description: `${rstDay.format('MMM D YYYY')} - ${rstDay.clone().add(1, 'w').format('MMM D YYYY')}`,
 		thumbnail: {
 			url: channel.guild.iconURL(),
 		},
 		fields: [],
+		footer: {
+			text: div2xp.length > 0 ? `last update ${lastUpd.format('ddd, MMM D YYYY H:mm')}` : '\u200b',
+		},
 	};
 	for (let i = 0; i < players.length && Math.floor(i / 10) < 25; i += 10) {
 		embed.fields.push({

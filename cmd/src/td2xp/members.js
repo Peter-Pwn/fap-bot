@@ -5,8 +5,7 @@ const CON = require(`${require.main.path}/src/const.json`);
 const fnc = require(`${require.main.path}/fnc`);
 
 module.exports = {
-	aliases: [],
-	description: 'Modifys uplay names for the Division 2 clan xp list.',
+	description: 'Handles members of the Division 2 clan xp list.',
 	modes: {
 		list: {
 			isDefault: true,

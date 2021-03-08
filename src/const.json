@@ -33,7 +33,7 @@
 	},
 	"DIV2XPLIMIT": {
 		"MAXCALLS": 30,
-		"INTIME": 60e3
+		"TIME": 60e3
 	},
 	"DIV2XPMFAILS": 3,
 	"DATETIMEPAT": ["YYYY-MM-DD h:mm a Z", "YYYY-MM-DD H:mm Z", "DD-MM-YYYY h:mm a Z", "DD-MM-YYYY H:mm Z"],

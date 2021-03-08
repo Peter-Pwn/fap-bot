@@ -6,7 +6,6 @@ const fnc = require(`${require.main.path}/fnc`);
 const reacts = require(`${require.main.path}/src/reacts.js`);
 
 module.exports = {
-	aliases: ['editwelcome', 'welcomeadd', 'addwelcome'],
 	description: 'Sets a welcome message in this channel.',
 	descriptionLong: 'You can let the bot append a list of all the commands available for everyone.',
 	args: 1,

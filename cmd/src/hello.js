@@ -4,7 +4,7 @@ const CON = require(`${require.main.path}/src/const.json`);
 const fnc = require(`${require.main.path}/fnc`);
 
 module.exports = {
-	aliases: ['hey', 'hi', 'h'],
+	aliases: ['hey', 'hi'],
 	description: 'Just say hello.',
 	descriptionLong: 'You also can test args. Just add them.',
 	args: 0,

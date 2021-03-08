@@ -20,7 +20,7 @@ const trnWeb = axios.create({
 module.exports = async function(query) {
 	if (query) trnApiCD.queue.push(query);
 	const now = moment();
-	if (trnApiCD.time.isSameOrBefore(now.clone().subtract(CON.DIV2XPLIMIT.INTIME))) {
+	if (trnApiCD.time.isSameOrBefore(now.clone().subtract(CON.DIV2XPLIMIT.TIME))) {
 		trnApiCD.remaining = trnApiCD.limit;
 		trnApiCD.time = now;
 	}
@@ -42,14 +42,14 @@ module.exports = async function(query) {
 		catch (e) {
 			//should we still hit the limit, retry after the timelimit
 			if (e.response && e.response.status === 429) {
-				await fnc.wait(CON.DIV2XPLIMIT.INTIME);
+				await fnc.wait(CON.DIV2XPLIMIT.TIME);
 				return await module.exports(q);
 			}
 			throw e;
 		}
 	}
 	else {
-		await fnc.wait(CON.DIV2XPLIMIT.INTIME - now.diff(trnApiCD.time));
+		await fnc.wait(CON.DIV2XPLIMIT.TIME - now.diff(trnApiCD.time));
 		return await module.exports();
 	}
 };

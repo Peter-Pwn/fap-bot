@@ -9,8 +9,7 @@ const reacts = require(`${require.main.path}/src/reacts.js`);
 const eRegex = require('emoji-regex');
 
 module.exports = {
-	aliases: ['editapprove', 'approveadd', 'addapprove'],
-	description: 'Adds or removes Approve emojis to a welcome message in this channel.',
+	description: 'Adds or removes Approve emojis to a welcome message.',
 	descriptionLong: 'You need to set a welcome message using editwelcome first.\nRemoving a reaction doesn\'t remove the role from members.',
 	args: 2,
 	usage: 'add <:emoji:> <@role> ... [:emoji:] [@role]\nremove <:emoji:> ... [:emoji:]',

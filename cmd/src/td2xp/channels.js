@@ -5,8 +5,7 @@ const fnc = require(`${require.main.path}/fnc`);
 const client = require(`${require.main.path}/src/client.js`);
 
 module.exports = {
-	aliases: [],
-	description: 'Modifys a channel for the Division 2 clan xp list.',
+	description: 'Handles channels of the Division 2 clan xp list.',
 	modes: {
 		list: {
 			isDefault: true,

@@ -5,7 +5,7 @@ module.exports = async function(message, text, { mention = true, delMsg = true, 
 	if (!text) throw new TypeError('no text');
 	if (typeof mention !== 'boolean') mention = true;
 	if (mention) text = `${message.author}, ${text}`;
-	if (text.length > 2048) text = text.substring(0, 2048);
+	if (text.length > 2048) text = `${text.substring(0, 2045)}...`;
 	if (typeof delMsg !== 'boolean') delMsg = true;
 	if (isNaN(delay) || delay < 0.5) delay = 5;
 	if (!color) color = message.channel.type === 'text' ? message.guild.me.displayColor : 0x7289da;
